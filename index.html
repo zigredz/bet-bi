@@ -1,3751 +1,6298 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#070d1d">
-<title>BET AI 5.0</title>
+<meta name="theme-color" content="#040b19">
+
+<title>BET AI 6.0</title>
 
 <style>
-:root{
- --bg:#070d1d;--card:#101a31;--card2:#0a1326;--line:#24314d;
- --text:#f6f8ff;--muted:#8492b2;--purple:#6979ff;--green:#20dfa6;
- --red:#ff647c;--yellow:#f6c760;--blue:#5ca8ff
-}
-*{box-sizing:border-box}
-body{
- margin:0;
- background:radial-gradient(circle at 50% -10%,#17234a 0,transparent 32%),var(--bg);
- color:var(--text);
- font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
-}
-button{font:inherit}
-.app{max-width:680px;margin:auto;padding:27px 17px 85px}
-.top,.row,.matchTop,.teamRow{
- display:flex;align-items:center;justify-content:space-between;gap:10px
-}
-.logo{font-size:29px;font-weight:950}
-.logo b{color:var(--purple)}
-.real{
- color:var(--green);background:#07392f;border-radius:40px;
- padding:9px 13px;font-size:11px;font-weight:900
-}
-.kicker{
- margin-top:34px;color:#7887ab;font-size:11px;
- font-weight:900;letter-spacing:2px
-}
-h1{font-size:34px;line-height:1.08;margin:10px 0}
-.sub{color:var(--muted);line-height:1.5}
-.stats{
- display:grid;grid-template-columns:repeat(3,1fr);
- gap:9px;margin:23px 0
-}
-.stat{
- background:var(--card);border:1px solid var(--line);
- padding:15px;border-radius:18px
-}
-.stat small{font-size:10px;color:var(--muted)}
-.stat strong{display:block;font-size:23px;margin-top:7px}
-.nav,.sports{
- display:flex;gap:8px;overflow:auto;scrollbar-width:none;
- margin:16px 0
-}
-.nav::-webkit-scrollbar,.sports::-webkit-scrollbar{display:none}
-.tab,.sport{
- white-space:nowrap;border:1px solid var(--line);
- background:#0c1529;color:#9ba8c5;
- padding:10px 14px;border-radius:40px;font-weight:850
-}
-.tab.active,.sport.active{
- background:var(--purple);border-color:var(--purple);color:white
-}
-.section{font-size:23px;font-weight:950;margin:22px 0 12px}
-.updated{font-size:10px;color:#73809e}
-.match{
- background:var(--card);border:1px solid var(--line);
- border-radius:22px;padding:17px;margin:11px 0
-}
-.league{
- color:#8391b1;font-size:10px;font-weight:900;
- text-transform:uppercase;max-width:70%
-}
-.status{
- background:#091226;border-radius:30px;padding:6px 9px;
- font-size:9px;font-weight:950
-}
-.status.live{background:#07382f;color:var(--green)}
-.teamRow{margin-top:14px}
-.team{
- display:flex;align-items:center;gap:9px;min-width:0;
- font-size:16px;font-weight:900
-}
-.team span:last-child{
- overflow:hidden;text-overflow:ellipsis;white-space:nowrap
-}
-.ball{
- width:12px;height:12px;background:var(--purple);
- border-radius:50%;flex:none
-}
-.score{font-size:21px;font-weight:950}
-.divider{height:1px;background:var(--line);margin:14px 0}
-.meta{
- display:flex;justify-content:space-between;
- color:#7e8ba8;font-size:11px
-}
-.actions{
- display:grid;grid-template-columns:1fr auto;
- gap:8px;margin-top:13px
-}
-.analyze,.save,.primary,.copy{
- border:0;border-radius:13px;padding:12px;
- font-weight:900;color:white
-}
-.analyze,.primary{background:var(--purple)}
-.save{
- background:#18243e;
- padding-left:15px;padding-right:15px
-}
-.loading,.empty{
- background:var(--card);border:1px solid var(--line);
- border-radius:20px;padding:28px;text-align:center;color:var(--muted)
-}
-.footer{
- color:#667592;text-align:center;font-size:10px;
- line-height:1.6;margin-top:28px
-}
-.footer a{color:#91a0ff}
+/* =========================================================
+   BET AI 6.0
+   MOBILE SPORTS ANALYTICS UI
+========================================================= */
 
-.modal{
- display:none;position:fixed;inset:0;z-index:100;
- background:var(--bg);overflow:auto
+:root{
+    --bg:#040b19;
+    --bg2:#071225;
+    --card:#0b1830;
+    --card2:#0d1d38;
+    --card3:#081426;
+
+    --line:#20375b;
+    --line2:#29466f;
+
+    --text:#f5f7ff;
+    --muted:#8293b4;
+    --muted2:#5f7194;
+
+    --blue:#5d7cff;
+    --blue2:#8197ff;
+    --purple:#9c55ff;
+    --pink:#ff4ba8;
+
+    --green:#2ce6a3;
+    --green2:#0ecf89;
+
+    --red:#ff4f70;
+    --yellow:#ffd45c;
+
+    --radius:22px;
 }
-.modal.show{display:block}
-.modalIn{max-width:680px;margin:auto;padding:18px 17px 80px}
+
+*{
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    margin:0;
+    color:var(--text);
+    background:
+        radial-gradient(
+            circle at 20% -5%,
+            rgba(74,97,255,.15),
+            transparent 27%
+        ),
+        radial-gradient(
+            circle at 90% 12%,
+            rgba(0,207,255,.07),
+            transparent 23%
+        ),
+        var(--bg);
+
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+
+    -webkit-font-smoothing:antialiased;
+}
+
+button{
+    font:inherit;
+}
+
+button,
+.match-card,
+.nav-button,
+.sport-button{
+    -webkit-tap-highlight-color:transparent;
+}
+
+a{
+    color:inherit;
+}
+
+.hidden{
+    display:none!important;
+}
+
+/* =========================================================
+   APP
+========================================================= */
+
+.app{
+    width:100%;
+    max-width:760px;
+    margin:0 auto;
+    padding:
+        max(20px,env(safe-area-inset-top))
+        16px
+        calc(105px + env(safe-area-inset-bottom));
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+}
+
+.brand{
+    min-width:0;
+}
+
+.logo{
+    display:flex;
+    align-items:center;
+    gap:7px;
+
+    font-size:29px;
+    font-weight:1000;
+    font-style:italic;
+    letter-spacing:-1.5px;
+}
+
+.logo-main{
+    color:#fff;
+}
+
+.logo-ai{
+    background:
+        linear-gradient(
+            90deg,
+            #8aa0ff,
+            #9d6cff,
+            #ff62ba
+        );
+
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+}
+
+.version{
+    color:#8fa2ff;
+    font-size:18px;
+}
+
+.brand-sub{
+    margin-top:3px;
+    color:#8998b7;
+    font-size:9px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+}
+
+.live-box{
+    display:flex;
+    align-items:center;
+    gap:8px;
+
+    border:1px solid rgba(44,230,163,.18);
+    background:rgba(7,28,40,.72);
+
+    padding:9px 12px;
+    border-radius:12px;
+}
+
+.live-dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:var(--green);
+
+    box-shadow:
+        0 0 0 4px rgba(44,230,163,.08),
+        0 0 14px rgba(44,230,163,.8);
+}
+
+.live-box strong{
+    display:block;
+    color:var(--green);
+    font-size:11px;
+}
+
+.live-box span{
+    display:block;
+    color:#8396b7;
+    font-size:8px;
+    margin-top:2px;
+}
+
+/* =========================================================
+   TOP NAVIGATION
+========================================================= */
+
+.top-nav{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+
+    margin-top:22px;
+    padding-bottom:3px;
+
+    scrollbar-width:none;
+}
+
+.top-nav::-webkit-scrollbar{
+    display:none;
+}
+
+.nav-button{
+    flex:0 0 auto;
+
+    border:1px solid var(--line);
+    background:linear-gradient(145deg,#0d1b33,#091529);
+
+    color:#c4cee0;
+
+    border-radius:13px;
+    padding:11px 15px;
+
+    font-size:11px;
+    font-weight:850;
+
+    cursor:pointer;
+}
+
+.nav-button.active{
+    border-color:#6581ff;
+    background:
+        linear-gradient(
+            145deg,
+            rgba(42,68,130,.85),
+            rgba(20,32,65,.95)
+        );
+
+    color:#fff;
+
+    box-shadow:
+        0 0 0 1px rgba(101,129,255,.3),
+        0 0 18px rgba(83,102,255,.24);
+}
+
+/* =========================================================
+   SPORTS
+========================================================= */
+
+.sports{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+
+    margin-top:17px;
+    padding-bottom:3px;
+
+    scrollbar-width:none;
+}
+
+.sports::-webkit-scrollbar{
+    display:none;
+}
+
+.sport-button{
+    flex:0 0 auto;
+
+    display:flex;
+    align-items:center;
+    gap:7px;
+
+    border:1px solid var(--line);
+    background:#081528;
+
+    color:#bac5da;
+
+    border-radius:999px;
+    padding:10px 15px;
+
+    font-size:11px;
+    font-weight:800;
+
+    cursor:pointer;
+}
+
+.sport-button.active{
+    color:#fff;
+
+    border-color:#7589ff;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(49,72,140,.9),
+            rgba(71,41,132,.7)
+        );
+
+    box-shadow:
+        0 0 17px rgba(104,91,255,.28);
+}
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.hero{
+    margin-top:27px;
+}
+
+.hero-top{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:15px;
+    align-items:center;
+}
+
+.hero h1{
+    margin:0;
+
+    font-size:
+        clamp(29px,7vw,43px);
+
+    line-height:1.05;
+    letter-spacing:-1.6px;
+}
+
+.gradient-text{
+    background:
+        linear-gradient(
+            90deg,
+            #9faaff,
+            #ba64ff,
+            #ff5dad
+        );
+
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+}
+
+.hero p{
+    margin:11px 0 0;
+
+    max-width:540px;
+
+    color:#8d9dbb;
+    font-size:12px;
+    line-height:1.55;
+}
+
+.hero-performance{
+    min-width:110px;
+
+    border:1px solid rgba(34,198,255,.2);
+    background:
+        linear-gradient(
+            145deg,
+            rgba(4,29,47,.92),
+            rgba(4,19,37,.95)
+        );
+
+    border-radius:16px;
+    padding:13px;
+}
+
+.hero-performance small{
+    display:block;
+    color:#a6b2c9;
+    font-size:8px;
+}
+
+.hero-performance strong{
+    display:block;
+    color:var(--green);
+
+    font-size:29px;
+    margin-top:6px;
+}
+
+.hero-performance span{
+    display:block;
+    color:#56e6b6;
+    font-size:8px;
+    margin-top:3px;
+}
+
+/* =========================================================
+   DASHBOARD STATS
+========================================================= */
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+
+    gap:8px;
+    margin-top:23px;
+}
+
+.stat{
+    min-width:0;
+
+    border:1px solid var(--line);
+    background:
+        linear-gradient(
+            145deg,
+            #0c1a32,
+            #081428
+        );
+
+    border-radius:16px;
+    padding:13px 11px;
+}
+
+.stat-icon{
+    font-size:16px;
+}
+
+.stat-label{
+    color:#8b9ab8;
+    font-size:8px;
+    margin-top:7px;
+}
+
+.stat-value{
+    font-size:20px;
+    font-weight:950;
+    margin-top:5px;
+}
+
+.stat-sub{
+    color:#65789b;
+    font-size:7px;
+    margin-top:3px;
+}
+
+.green{
+    color:var(--green);
+}
+
+.red{
+    color:var(--red);
+}
+
+.yellow{
+    color:var(--yellow);
+}
+
+/* =========================================================
+   SECTION TITLE
+========================================================= */
+
+.section-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+
+    margin-top:28px;
+    margin-bottom:11px;
+}
+
+.section-title{
+    font-size:20px;
+    font-weight:950;
+}
+
+.updated{
+    color:#788aa9;
+    font-size:8px;
+}
+
+.updated-dot{
+    display:inline-block;
+
+    width:7px;
+    height:7px;
+
+    margin-right:5px;
+
+    background:var(--green);
+    border-radius:50%;
+
+    box-shadow:
+        0 0 10px rgba(44,230,163,.7);
+}
+
+/* =========================================================
+   MATCH LIST
+========================================================= */
+
+.matches{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.match-card{
+    position:relative;
+
+    border:1px solid var(--line);
+    background:
+        linear-gradient(
+            135deg,
+            rgba(12,27,52,.98),
+            rgba(7,19,38,.98)
+        );
+
+    border-radius:17px;
+
+    padding:13px;
+
+    cursor:pointer;
+
+    transition:
+        transform .15s ease,
+        border-color .15s ease;
+}
+
+.match-card:active{
+    transform:scale(.99);
+}
+
+.match-card.live-card{
+    border-color:
+        rgba(255,79,112,.4);
+}
+
+.match-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+}
+
+.match-time{
+    color:#d6deee;
+    font-size:9px;
+    font-weight:900;
+}
+
+.live-pill{
+    display:inline-flex;
+    align-items:center;
+
+    background:
+        linear-gradient(
+            90deg,
+            #ff3d6d,
+            #ff4f78
+        );
+
+    color:#fff;
+
+    border-radius:6px;
+    padding:4px 7px;
+
+    font-size:8px;
+    font-weight:950;
+
+    box-shadow:
+        0 0 12px rgba(255,60,105,.24);
+}
+
+.match-league{
+    color:#6f82a4;
+    font-size:8px;
+
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+
+    max-width:70%;
+}
+
+.match-main{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:12px;
+    align-items:center;
+
+    margin-top:10px;
+}
+
+.team-list{
+    min-width:0;
+}
+
+.team-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:8px;
+
+    min-width:0;
+
+    margin:7px 0;
+}
+
+.team-name{
+    display:flex;
+    align-items:center;
+    gap:8px;
+
+    min-width:0;
+
+    font-size:13px;
+    font-weight:850;
+}
+
+.team-name-text{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.team-badge{
+    width:23px;
+    height:23px;
+
+    flex:0 0 23px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:8px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #172d52,
+            #0d1e38
+        );
+
+    border:1px solid #27446d;
+
+    font-size:10px;
+    font-weight:950;
+}
+
+.team-logo{
+    width:23px;
+    height:23px;
+    object-fit:contain;
+}
+
+.match-score{
+    min-width:25px;
+
+    text-align:right;
+
+    font-size:15px;
+    font-weight:950;
+}
+
+.arrow{
+    color:#8396bb;
+    font-size:21px;
+}
+
+/* =========================================================
+   MINI FORM
+========================================================= */
+
+.mini-form{
+    display:flex;
+    gap:3px;
+    margin-left:31px;
+    margin-top:-2px;
+}
+
+.form-dot{
+    width:14px;
+    height:14px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:50%;
+
+    font-size:6px;
+    font-weight:950;
+}
+
+.form-w{
+    background:#145b47;
+    color:#4cf1b7;
+}
+
+.form-l{
+    background:#572333;
+    color:#ff7b93;
+}
+
+.form-d{
+    background:#394458;
+    color:#d5dbea;
+}
+
+/* =========================================================
+   ODDS ROW
+========================================================= */
+
+.card-odds{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+
+    gap:6px;
+
+    margin-top:11px;
+}
+
+.card-odd{
+    border:1px solid #243b61;
+    background:#0b1930;
+
+    border-radius:9px;
+    padding:7px 5px;
+
+    text-align:center;
+}
+
+.card-odd small{
+    display:block;
+
+    color:#607494;
+
+    font-size:7px;
+}
+
+.card-odd strong{
+    display:block;
+
+    font-size:12px;
+
+    margin-top:2px;
+}
+
+/* =========================================================
+   LOADING / EMPTY
+========================================================= */
+
+.loading,
+.empty{
+    border:1px solid var(--line);
+    background:var(--card);
+
+    border-radius:18px;
+
+    padding:28px 20px;
+
+    text-align:center;
+
+    color:#8293b4;
+    font-size:12px;
+    line-height:1.6;
+}
+
+.loader{
+    width:34px;
+    height:34px;
+
+    margin:0 auto 13px;
+
+    border:3px solid #1c2b48;
+    border-top-color:#7185ff;
+
+    border-radius:50%;
+
+    animation:spin .7s linear infinite;
+}
+
+@keyframes spin{
+    to{
+        transform:rotate(360deg);
+    }
+}
+
+/* =========================================================
+   BOTTOM NAV
+========================================================= */
+
+.bottom-nav{
+    position:fixed;
+
+    left:50%;
+    bottom:0;
+
+    transform:translateX(-50%);
+
+    width:100%;
+    max-width:760px;
+
+    z-index:50;
+
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+
+    padding:
+        9px 7px
+        calc(8px + env(safe-area-inset-bottom));
+
+    border-top:1px solid #1c3152;
+
+    background:
+        rgba(4,11,25,.94);
+
+    backdrop-filter:
+        blur(18px);
+}
+
+.bottom-button{
+    border:0;
+    background:transparent;
+
+    color:#7384a4;
+
+    text-align:center;
+
+    padding:5px 2px;
+
+    font-size:8px;
+
+    cursor:pointer;
+}
+
+.bottom-icon{
+    display:block;
+
+    font-size:18px;
+
+    margin-bottom:3px;
+}
+
+.bottom-button.active{
+    color:#7f96ff;
+}
+
+/* =========================================================
+   ANALYSIS PAGE
+========================================================= */
+
+.analysis-page{
+    display:none;
+
+    position:fixed;
+    inset:0;
+
+    z-index:100;
+
+    overflow:auto;
+
+    background:
+        radial-gradient(
+            circle at 40% -10%,
+            rgba(78,90,255,.15),
+            transparent 28%
+        ),
+        var(--bg);
+}
+
+.analysis-page.show{
+    display:block;
+}
+
+.analysis-inner{
+    width:100%;
+    max-width:760px;
+
+    margin:0 auto;
+
+    padding:
+        max(18px,env(safe-area-inset-top))
+        16px
+        calc(35px + env(safe-area-inset-bottom));
+}
+
+.analysis-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:10px;
+}
+
 .back{
- border:0;background:#17223b;color:white;
- border-radius:12px;padding:10px 13px;font-weight:900
+    border:1px solid var(--line);
+    background:#0c1a32;
+
+    color:#fff;
+
+    border-radius:11px;
+
+    padding:9px 12px;
+
+    font-size:11px;
+    font-weight:900;
 }
-.hero,.block{
- background:var(--card);border:1px solid var(--line);
- border-radius:22px;padding:18px;margin-top:13px
+
+.favorite{
+    border:1px solid var(--line);
+    background:#0c1a32;
+
+    color:#b9c5db;
+
+    width:38px;
+    height:38px;
+
+    border-radius:11px;
+
+    font-size:18px;
 }
-.heroLeague{
- text-align:center;color:#8391b1;font-size:10px;
- font-weight:900;text-transform:uppercase
+
+/* =========================================================
+   ANALYSIS HERO
+========================================================= */
+
+.analysis-match{
+    margin-top:15px;
+
+    border:1px solid var(--line2);
+
+    background:
+        linear-gradient(
+            145deg,
+            #10203d,
+            #0a172d
+        );
+
+    border-radius:22px;
+
+    padding:18px;
 }
-.vs{
- display:grid;grid-template-columns:1fr auto 1fr;
- align-items:center;gap:10px;margin-top:19px;text-align:center
+
+.analysis-league{
+    text-align:center;
+
+    color:#7185a8;
+
+    font-size:9px;
 }
-.club{font-weight:950}
-.bigScore{font-size:27px;font-weight:950}
-.ai{
- background:linear-gradient(145deg,#172443,#101a31);
- border-color:#344777
+
+.analysis-time{
+    text-align:center;
+
+    color:#9aa9c4;
+
+    font-size:9px;
+
+    margin-top:5px;
 }
-.aiLabel{
- color:#91a0ff;font-size:10px;font-weight:950;
- letter-spacing:1.5px
+
+.versus{
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+
+    align-items:center;
+
+    gap:12px;
+
+    margin-top:22px;
 }
-.aiScore{
- display:flex;align-items:center;justify-content:space-between;
- margin-top:13px;background:#0a1326;border-radius:16px;padding:14px
+
+.analysis-team{
+    text-align:center;
+    min-width:0;
 }
-.aiScore strong{font-size:28px}
-.quality{font-size:11px;color:var(--muted)}
-.grid{
- display:grid;grid-template-columns:repeat(2,1fr);gap:8px
+
+.analysis-logo{
+    width:58px;
+    height:58px;
+
+    display:grid;
+    place-items:center;
+
+    margin:0 auto 8px;
+
+    border:1px solid #2a4771;
+
+    background:#0a172c;
+
+    border-radius:18px;
+
+    font-size:19px;
+    font-weight:950;
 }
-.metric{
- background:#091225;border-radius:14px;padding:12px
+
+.analysis-logo img{
+    width:45px;
+    height:45px;
+
+    object-fit:contain;
 }
-.metric small{font-size:9px;color:#7483a2}
-.metric strong{display:block;font-size:17px;margin-top:5px}
-.notice{
- background:#091225;border-radius:14px;padding:13px;
- margin-top:13px;color:#9ca9c4;font-size:12px;line-height:1.55
+
+.analysis-team-name{
+    font-size:13px;
+    font-weight:950;
+
+    overflow:hidden;
+    text-overflow:ellipsis;
 }
-.good{color:var(--green)}
-.bad{color:var(--red)}
-.warn{color:var(--yellow)}
-.factor{margin-top:14px}
-.factorTop{
- display:flex;justify-content:space-between;
- font-size:11px;color:#a8b4cc
+
+.vs-box{
+    text-align:center;
 }
-.bar{
- height:7px;background:#091225;border-radius:10px;
- margin-top:6px;overflow:hidden
+
+.vs-text{
+    color:#607496;
+
+    font-size:12px;
+    font-weight:900;
 }
-.fill{
- height:100%;background:var(--purple);border-radius:10px
+
+.vs-score{
+    font-size:21px;
+    font-weight:1000;
+
+    margin-top:4px;
 }
-.pred{
- border-left:3px solid var(--purple);
- padding-left:12px;margin-top:16px;line-height:1.5
+
+/* =========================================================
+   ANALYSIS TABS
+========================================================= */
+
+.analysis-tabs{
+    display:flex;
+    gap:6px;
+
+    overflow-x:auto;
+
+    margin-top:16px;
+
+    scrollbar-width:none;
 }
-.predTitle{font-size:19px;font-weight:950}
+
+.analysis-tabs::-webkit-scrollbar{
+    display:none;
+}
+
+.analysis-tab{
+    flex:0 0 auto;
+
+    border:1px solid #263d61;
+    background:#0a172c;
+
+    color:#8192b2;
+
+    border-radius:9px;
+
+    padding:8px 12px;
+
+    font-size:9px;
+    font-weight:850;
+}
+
+.analysis-tab.active{
+    color:#fff;
+
+    border-color:#6d84ff;
+
+    background:
+        linear-gradient(
+            135deg,
+            #294684,
+            #3c337d
+        );
+
+    box-shadow:
+        0 0 14px rgba(91,104,255,.25);
+}
+
+/* =========================================================
+   ANALYSIS GRID
+========================================================= */
+
+.analysis-grid{
+    display:grid;
+    grid-template-columns:1.1fr .9fr;
+
+    gap:9px;
+
+    margin-top:11px;
+}
+
+.panel{
+    border:1px solid var(--line);
+
+    background:
+        linear-gradient(
+            145deg,
+            #0d1c35,
+            #08162a
+        );
+
+    border-radius:17px;
+
+    padding:14px;
+}
+
+.panel-title{
+    font-size:11px;
+    font-weight:950;
+
+    margin-bottom:13px;
+}
+
+.model-row{
+    margin:12px 0;
+}
+
+.model-row-top{
+    display:flex;
+    justify-content:space-between;
+
+    gap:10px;
+
+    color:#a7b3c9;
+
+    font-size:9px;
+}
+
+.model-row-top strong{
+    color:#fff;
+}
+
+.model-bar{
+    height:7px;
+
+    margin-top:6px;
+
+    background:#071123;
+
+    border-radius:99px;
+
+    overflow:hidden;
+}
+
+.model-fill{
+    height:100%;
+
+    border-radius:99px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #5776ff,
+            #8c69ff
+        );
+}
+
+.model-fill.draw{
+    background:#60718e;
+}
+
+.model-fill.away{
+    background:
+        linear-gradient(
+            90deg,
+            #c05dff,
+            #ff59aa
+        );
+}
+
+/* =========================================================
+   CONFIDENCE
+========================================================= */
+
 .confidence{
- font-size:11px;color:#91a0ff;margin-top:4px
+    margin-top:15px;
 }
-.form{
- display:flex;gap:6px;flex-wrap:wrap;margin-top:8px
+
+.confidence-top{
+    display:flex;
+    justify-content:space-between;
+
+    font-size:9px;
+    color:#91a1bd;
 }
-.form span{
- width:29px;height:29px;border-radius:8px;
- display:grid;place-items:center;font-size:10px;
- font-weight:950;background:#273149
+
+.confidence-top strong{
+    color:var(--green);
+    font-size:15px;
 }
-.form .w{background:#154538;color:#5ee4b4}
-.form .l{background:#49212c;color:#ff8799}
-.form .d{background:#383d49}
-.small{
- font-size:11px;color:var(--muted);line-height:1.5
+
+.confidence-bar{
+    height:7px;
+
+    margin-top:6px;
+
+    background:#071123;
+
+    border-radius:99px;
+
+    overflow:hidden;
 }
-.copy{
- width:100%;border:1px solid #40528a;
- background:#162343;margin-top:10px
+
+.confidence-fill{
+    height:100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            #24d79a,
+            #48edbd
+        );
+
+    border-radius:99px;
 }
-.progress{
- height:6px;background:#111b31;border-radius:20px;
- overflow:hidden;margin-top:12px
+
+/* =========================================================
+   MARKET
+========================================================= */
+
+.market-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+
+    gap:5px;
 }
-.progress div{
- height:100%;background:var(--purple);width:30%;
- animation:move 1s infinite alternate
+
+.market-odd{
+    text-align:center;
+
+    background:#122441;
+
+    border:1px solid #253e63;
+
+    border-radius:10px;
+
+    padding:8px 4px;
 }
-@keyframes move{
- from{margin-left:0}
- to{margin-left:70%}
+
+.market-odd small{
+    display:block;
+
+    color:#7486a6;
+
+    font-size:7px;
 }
-.odds{
- display:grid;grid-template-columns:repeat(3,1fr);
- gap:7px;margin-top:10px
+
+.market-odd strong{
+    display:block;
+
+    font-size:14px;
+
+    margin-top:3px;
 }
-.odd{
- background:#091225;padding:11px 7px;
- border-radius:13px;text-align:center
+
+.fair-title{
+    margin-top:13px;
+
+    color:#7183a2;
+
+    font-size:8px;
 }
-.odd small{
- display:block;color:#71809e;font-size:9px
+
+.fair-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+
+    gap:5px;
+
+    margin-top:6px;
 }
-.odd strong{font-size:18px}
-.journalItem{
- background:var(--card);border:1px solid var(--line);
- border-radius:18px;padding:14px;margin:9px 0
+
+.fair{
+    text-align:center;
+
+    background:#081426;
+
+    border-radius:8px;
+
+    padding:7px 3px;
+
+    font-size:8px;
 }
+
+.fair strong{
+    display:block;
+
+    color:#fff;
+
+    font-size:12px;
+
+    margin-top:2px;
+}
+
+/* =========================================================
+   FACTORS
+========================================================= */
+
+.factor{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    gap:10px;
+
+    margin:10px 0;
+
+    font-size:9px;
+}
+
+.factor-name{
+    color:#a5b2c9;
+}
+
+.factor-value{
+    font-weight:950;
+}
+
+.factor-value.positive{
+    color:var(--green);
+}
+
+.factor-value.negative{
+    color:var(--red);
+}
+
+.factor-value.neutral{
+    color:#95a4be;
+}
+
+/* =========================================================
+   PREDICTION
+========================================================= */
+
+.prediction{
+    margin-top:10px;
+
+    border:1px solid #825cff;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(28,29,70,.96),
+            rgba(21,18,59,.96)
+        );
+
+    border-radius:16px;
+
+    padding:15px;
+
+    box-shadow:
+        inset 0 0 25px rgba(92,75,255,.05),
+        0 0 18px rgba(111,79,255,.08);
+}
+
+.prediction-label{
+    color:#ffd75e;
+
+    font-size:9px;
+    font-weight:950;
+}
+
+.prediction-main{
+    display:grid;
+    grid-template-columns:auto 1fr;
+
+    gap:11px;
+
+    align-items:center;
+
+    margin-top:10px;
+}
+
+.grade{
+    width:42px;
+    height:42px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:50%;
+
+    background:var(--green);
+
+    color:#06251a;
+
+    font-size:18px;
+    font-weight:1000;
+}
+
+.prediction-title{
+    font-size:16px;
+    font-weight:1000;
+}
+
+.prediction-sub{
+    color:#8e9dbb;
+
+    font-size:9px;
+    margin-top:3px;
+    line-height:1.45;
+}
+
+/* =========================================================
+   DETAILS
+========================================================= */
+
+.detail-section{
+    margin-top:10px;
+
+    border:1px solid var(--line);
+
+    background:
+        linear-gradient(
+            145deg,
+            #0d1c35,
+            #08162a
+        );
+
+    border-radius:17px;
+
+    padding:15px;
+}
+
+.detail-title{
+    font-size:15px;
+    font-weight:950;
+
+    margin-bottom:12px;
+}
+
+.form-row{
+    margin-top:13px;
+}
+
+.form-name{
+    color:#9aa9c3;
+
+    font-size:9px;
+}
+
+.form-badges{
+    display:flex;
+    gap:5px;
+
+    margin-top:7px;
+}
+
+.form-badge{
+    width:28px;
+    height:28px;
+
+    display:grid;
+    place-items:center;
+
+    border-radius:8px;
+
+    font-size:9px;
+    font-weight:950;
+}
+
+.form-badge.w{
+    background:#13543f;
+    color:#52efb6;
+}
+
+.form-badge.l{
+    background:#542231;
+    color:#ff7d92;
+}
+
+.form-badge.d{
+    background:#394457;
+    color:#e0e4ed;
+}
+
+.metrics{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+
+    gap:7px;
+
+    margin-top:13px;
+}
+
+.metric{
+    background:#081426;
+
+    border-radius:11px;
+
+    padding:11px;
+}
+
+.metric small{
+    display:block;
+
+    color:#6e80a0;
+
+    font-size:7px;
+}
+
+.metric strong{
+    display:block;
+
+    margin-top:4px;
+
+    font-size:15px;
+}
+
+.data-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+
+    gap:7px;
+}
+
+.data-item{
+    background:#081426;
+
+    border-radius:11px;
+
+    padding:10px;
+
+    text-align:center;
+}
+
+.data-item small{
+    display:block;
+
+    color:#7183a4;
+
+    font-size:7px;
+}
+
+.data-item strong{
+    display:block;
+
+    margin-top:5px;
+
+    font-size:15px;
+}
+
+.available{
+    color:var(--green);
+}
+
+.unavailable{
+    color:#657795;
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.primary-button{
+    width:100%;
+
+    border:0;
+
+    background:
+        linear-gradient(
+            90deg,
+            #5c72ff,
+            #8e5fff
+        );
+
+    color:#fff;
+
+    border-radius:12px;
+
+    padding:13px;
+
+    font-size:11px;
+    font-weight:950;
+
+    margin-top:10px;
+}
+
+.secondary-button{
+    width:100%;
+
+    border:1px solid #304c78;
+
+    background:#0c1a32;
+
+    color:#b9c6dc;
+
+    border-radius:12px;
+
+    padding:12px;
+
+    font-size:10px;
+    font-weight:900;
+
+    margin-top:8px;
+}
+
+/* =========================================================
+   JOURNAL
+========================================================= */
+
+.journal{
+    display:none;
+}
+
+.journal.show{
+    display:block;
+}
+
+.journal-stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+
+    gap:7px;
+}
+
+.journal-item{
+    margin-top:9px;
+
+    border:1px solid var(--line);
+
+    background:var(--card);
+
+    border-radius:15px;
+
+    padding:13px;
+}
+
+.journal-item-top{
+    display:flex;
+    justify-content:space-between;
+
+    gap:10px;
+}
+
+.journal-match{
+    font-size:11px;
+    font-weight:900;
+}
+
 .result{
- font-size:10px;font-weight:950;border-radius:20px;
- padding:5px 8px;background:#1a253c
+    border-radius:99px;
+
+    padding:4px 7px;
+
+    font-size:7px;
+    font-weight:950;
+
+    background:#1b2942;
 }
-.result.win{background:#164536;color:#62e8b7}
-.result.loss{background:#4b202b;color:#ff8398}
-.result.push{background:#45402b;color:#f7d675}
+
+.result.win{
+    color:#55e9b5;
+    background:#124335;
+}
+
+.result.loss{
+    color:#ff8297;
+    background:#4d202c;
+}
+
+.result.push{
+    color:#ffe17d;
+    background:#463f24;
+}
+
+.journal-info{
+    color:#7e8eaa;
+
+    font-size:8px;
+    line-height:1.5;
+
+    margin-top:7px;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media(max-width:520px){
+
+    .stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .hero-performance{
+        display:none;
+    }
+
+    .hero-top{
+        grid-template-columns:1fr;
+    }
+
+    .analysis-grid{
+        grid-template-columns:1fr;
+    }
+
+    .journal-stats{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+}
+
 </style>
 </head>
 
 <body>
 
-<main class="app">
+<div class="app" id="mainApp">
 
- <div class="top">
-  <div class="logo">BET <b>AI</b></div>
-  <div class="real">● LIVE DATA</div>
- </div>
+    <!-- HEADER -->
 
- <div class="kicker">BET AI 5.0</div>
+    <header class="header">
 
- <h1>
-  Спортивный<br>
-  аналитический центр
- </h1>
+        <div class="brand">
 
- <div class="sub">
-  Матчи, форма, расширенная статистика,
-  рыночные коэффициенты и журнал модели.
- </div>
+            <div class="logo">
+                <span class="logo-main">BET</span>
+                <span class="logo-ai">AI</span>
+                <span class="version">6.0</span>
+            </div>
 
- <div class="stats">
-  <div class="stat">
-   <small>МАТЧЕЙ</small>
-   <strong id="total">—</strong>
-  </div>
+            <div class="brand-sub">
+                АНАЛИЗ • СТАТИСТИКА • ПРОГНОЗЫ
+            </div>
 
-  <div class="stat">
-   <small>LIVE</small>
-   <strong id="live">—</strong>
-  </div>
+        </div>
 
-  <div class="stat">
-   <small>WIN RATE</small>
-   <strong id="winrate">—</strong>
-  </div>
- </div>
+        <div class="live-box">
 
- <div class="nav">
-  <button class="tab active" data-view="all">Все</button>
-  <button class="tab" data-view="live">🔴 LIVE</button>
-  <button class="tab" data-view="upcoming">Скоро</button>
-  <button class="tab" data-view="finished">Завершённые</button>
-  <button class="tab" data-view="journal">⭐ Прогнозы</button>
- </div>
+            <span class="live-dot"></span>
 
- <div class="sports">
-  <button class="sport active" data-sport="basketball">
-   🏀 Баскетбол
-  </button>
+            <div>
+                <strong>LIVE DATA</strong>
+                <span>SportScore • Analytics</span>
+            </div>
 
-  <button class="sport" data-sport="football">
-   ⚽ Футбол
-  </button>
+        </div>
 
-  <button class="sport" data-sport="tennis">
-   🎾 Теннис
-  </button>
+    </header>
 
-  <button class="sport" data-sport="cricket">
-   🏏 Крикет
-  </button>
- </div>
 
- <div class="row">
-  <div class="section" id="sectionTitle">Матчи</div>
-  <div class="updated" id="updated"></div>
- </div>
+    <!-- MAIN NAV -->
 
- <div id="content"></div>
+    <nav class="top-nav">
 
- <div class="footer">
-  Sports data:
-  <a
-   href="https://sportscore.com/"
-   target="_blank"
-   rel="dofollow"
-  >
-   Powered by SportScore
-  </a>
+        <button
+            class="nav-button active"
+            data-view="all"
+        >
+            ⌂ Главная
+        </button>
 
-  <br>
+        <button
+            class="nav-button"
+            data-view="live"
+        >
+            ◉ Live
+        </button>
 
-  Odds data:
-  <a
-   href="https://1.ml/"
-   target="_blank"
-  >
-   1.ML
-  </a>
+        <button
+            class="nav-button"
+            data-view="upcoming"
+        >
+            ▣ Сегодня
+        </button>
 
-  <br><br>
+        <button
+            class="nav-button"
+            data-view="journal"
+        >
+            ☆ Прогнозы
+        </button>
 
-  BET AI — статистическая модель.
-  Индекс модели не является гарантией результата или прибыли.
- </div>
+        <button
+            class="nav-button"
+            data-view="finished"
+        >
+            ✓ Завершённые
+        </button>
 
-</main>
+    </nav>
 
-<div class="modal" id="modal">
- <div class="modalIn">
 
-  <button
-   class="back"
-   onclick="closeModal()"
-  >
-   ← Назад
-  </button>
+    <!-- SPORTS -->
 
-  <div id="detail"></div>
+    <div class="sports">
 
- </div>
+        <button
+            class="sport-button active"
+            data-sport="basketball"
+        >
+            ◉ Все / 🏀
+        </button>
+
+        <button
+            class="sport-button"
+            data-sport="football"
+        >
+            ⚽ Футбол
+        </button>
+
+        <button
+            class="sport-button"
+            data-sport="basketball"
+        >
+            🏀 Баскетбол
+        </button>
+
+        <button
+            class="sport-button"
+            data-sport="tennis"
+        >
+            🎾 Теннис
+        </button>
+
+        <button
+            class="sport-button"
+            data-sport="cricket"
+        >
+            🏏 Крикет
+        </button>
+
+    </div>
+
+
+    <!-- DASHBOARD -->
+
+    <section id="dashboard">
+
+        <div class="hero">
+
+            <div class="hero-top">
+
+                <div>
+
+                    <h1>
+                        Профессиональная аналитика
+                        <span class="gradient-text">
+                            на реальных данных
+                        </span>
+                    </h1>
+
+                    <p>
+                        Матчи, форма, H2H, статистика,
+                        коэффициенты рынка и независимый
+                        аналитический индекс BET AI.
+                    </p>
+
+                </div>
+
+                <div class="hero-performance">
+
+                    <small>
+                        Успешные прогнозы
+                    </small>
+
+                    <strong id="heroWinRate">
+                        —
+                    </strong>
+
+                    <span>
+                        журнал модели
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- STATS -->
+
+        <div class="stats">
+
+            <div class="stat">
+
+                <div class="stat-icon">
+                    🗓
+                </div>
+
+                <div class="stat-label">
+                    МАТЧЕЙ
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="statMatches"
+                >
+                    —
+                </div>
+
+                <div class="stat-sub">
+                    в текущей выборке
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-icon red">
+                    ◉
+                </div>
+
+                <div class="stat-label">
+                    LIVE
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="statLive"
+                >
+                    —
+                </div>
+
+                <div class="stat-sub">
+                    сейчас
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-icon green">
+                    ▥
+                </div>
+
+                <div class="stat-label">
+                    ROI
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="statROI"
+                >
+                    —
+                </div>
+
+                <div class="stat-sub">
+                    журнал
+                </div>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-icon">
+                    ◎
+                </div>
+
+                <div class="stat-label">
+                    WIN RATE
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="statWinRate"
+                >
+                    —
+                </div>
+
+                <div class="stat-sub">
+                    закрытые прогнозы
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- MATCH TITLE -->
+
+        <div class="section-head">
+
+            <div
+                class="section-title"
+                id="sectionTitle"
+            >
+                Ближайшие матчи
+            </div>
+
+            <div
+                class="updated"
+                id="updated"
+            >
+                <span class="updated-dot"></span>
+                обновление…
+            </div>
+
+        </div>
+
+
+        <div
+            class="matches"
+            id="matches"
+        ></div>
+
+    </section>
+
+
+    <!-- JOURNAL -->
+
+    <section
+        class="journal"
+        id="journal"
+    ></section>
+
 </div>
+
+
+<!-- =====================================================
+     ANALYSIS PAGE
+===================================================== -->
+
+<div
+    class="analysis-page"
+    id="analysisPage"
+>
+
+    <div class="analysis-inner">
+
+        <div class="analysis-header">
+
+            <button
+                class="back"
+                onclick="closeAnalysis()"
+            >
+                ← Назад
+            </button>
+
+            <div class="logo">
+                <span class="logo-main">
+                    BET
+                </span>
+
+                <span class="logo-ai">
+                    AI
+                </span>
+
+                <span class="version">
+                    6.0
+                </span>
+            </div>
+
+            <button class="favorite">
+                ☆
+            </button>
+
+        </div>
+
+        <div id="analysisContent"></div>
+
+    </div>
+
+</div>
+
+
+<!-- BOTTOM NAV -->
+
+<nav class="bottom-nav">
+
+    <button
+        class="bottom-button active"
+        data-bottom="all"
+    >
+        <span class="bottom-icon">
+            ⌂
+        </span>
+        Главная
+    </button>
+
+    <button
+        class="bottom-button"
+        data-bottom="live"
+    >
+        <span class="bottom-icon">
+            ◉
+        </span>
+        LIVE
+    </button>
+
+    <button
+        class="bottom-button"
+        data-bottom="upcoming"
+    >
+        <span class="bottom-icon">
+            ⌕
+        </span>
+        Матчи
+    </button>
+
+    <button
+        class="bottom-button"
+        data-bottom="journal"
+    >
+        <span class="bottom-icon">
+            ☆
+        </span>
+        Прогнозы
+    </button>
+
+    <button
+        class="bottom-button"
+        data-bottom="finished"
+    >
+        <span class="bottom-icon">
+            ◎
+        </span>
+        Результаты
+    </button>
+
+</nav>
+
 
 <script>
 
-const SS="https://sportscore.com/api/widget";
-const ODDS="https://1.ml/api/v1/odds";
+/* =========================================================
+   BET AI 6.0 ENGINE
+========================================================= */
 
-let sport="basketball";
-let view="all";
-let matches=[];
-let oddsCache=null;
+const SPORT_API =
+    "https://sportscore.com/api/widget";
 
-const content=document.getElementById("content");
+let sport =
+    "basketball";
+
+let currentView =
+    "all";
+
+let matches = [];
+
+let selectedMatch =
+    null;
 
 
-/* =====================================================
-   HELPERS
-===================================================== */
+/* =========================================================
+   BASIC HELPERS
+========================================================= */
 
-function esc(v){
+function esc(value){
 
- return String(v??"").replace(
-  /[&<>"']/g,
-  c=>({
-   "&":"&amp;",
-   "<":"&lt;",
-   ">":"&gt;",
-   '"':"&quot;",
-   "'":"&#39;"
-  }[c])
- );
-
-}
-
-function first(...v){
-
- return v.find(
-  x=>x!==undefined&&x!==null&&x!==""
- );
-
-}
-
-function slugify(s){
-
- return String(s||"")
-  .toLowerCase()
-  .trim()
-  .replace(/[^\p{L}\p{N}]+/gu,"-")
-  .replace(/^-|-$/g,"");
-
-}
-
-function normalize(s){
-
- return String(s||"")
-  .toLowerCase()
-  .normalize("NFD")
-  .replace(/[\u0300-\u036f]/g,"")
-  .replace(/[^a-z0-9а-яё]/gi,"");
-
-}
-
-function num(v){
-
- const n=Number(v);
-
- return Number.isFinite(n)
-  ? n
-  : null;
-
-}
-
-function clamp(n,a,b){
-
- return Math.max(
-  a,
-  Math.min(b,n)
- );
-
-}
-
-function avg(a){
-
- return a.length
-  ? a.reduce((x,y)=>x+y,0)/a.length
-  : null;
+    return String(
+        value ?? ""
+    ).replace(
+        /[&<>"']/g,
+        char => ({
+            "&":"&amp;",
+            "<":"&lt;",
+            ">":"&gt;",
+            '"':"&quot;",
+            "'":"&#39;"
+        })[char]
+    );
 
 }
 
 
-/* =====================================================
-   TEAM PARSER
-===================================================== */
+function first(...values){
 
-function objName(o){
-
- if(!o)return "";
-
- if(typeof o==="string")
-  return o.trim();
-
- if(typeof o!=="object")
-  return "";
-
- return first(
-  o.name,
-  o.fullName,
-  o.full_name,
-  o.shortName,
-  o.short_name,
-  o.displayName,
-  o.display_name,
-  o.title,
-  o.teamName,
-  o.team_name,
-  o.label,
-  o.slug
- )||"";
-
-}
-
-function objLogo(o){
-
- if(!o||typeof o!=="object")
-  return "";
-
- return first(
-  o.logo,
-  o.logoUrl,
-  o.logo_url,
-  o.image,
-  o.imageUrl,
-  o.image_url,
-  o.badge,
-  o.crest,
-  o.icon
- )||"";
-
-}
-
-function objSlug(o){
-
- if(!o)return "";
-
- if(typeof o==="object"){
-
-  return first(
-   o.slug,
-   o.team_slug,
-   o.teamSlug,
-   ""
-  )||"";
-
- }
-
- return "";
+    return values.find(
+        value =>
+            value !== undefined &&
+            value !== null &&
+            value !== ""
+    );
 
 }
 
 
-function recursiveTeam(m,side){
+function number(value){
 
- const keys=
-  side==="home"
+    const n =
+        Number(value);
 
-  ?[
-    "home",
-    "hometeam",
-    "home_team",
-    "team1",
-    "participant1",
-    "competitor1"
-   ]
+    return Number.isFinite(n)
+        ? n
+        : null;
 
-  :[
-    "away",
-    "awayteam",
-    "away_team",
-    "team2",
-    "participant2",
-    "competitor2"
-   ];
+}
 
 
- for(const k of Object.keys(m||{})){
+function clamp(
+    value,
+    min,
+    max
+){
 
-  const n=k
-   .toLowerCase()
-   .replace(/[-_\s]/g,"");
+    return Math.max(
+        min,
+        Math.min(
+            max,
+            value
+        )
+    );
 
-  if(
-   keys.some(
-    x=>n===x.replace(/[-_\s]/g,"")
-   )
-  ){
-
-   const name=objName(m[k]);
-
-   if(name){
-
-    return{
-     name,
-     logo:objLogo(m[k]),
-     slug:objSlug(m[k]),
-     raw:m[k]
-    };
-
-   }
-
-  }
-
- }
+}
 
 
- const arrays=[
-  m.participants,
-  m.competitors,
-  m.teams,
-  m.opponents
- ].filter(Array.isArray);
+function average(values){
+
+    const clean =
+        values.filter(
+            value =>
+                Number.isFinite(value)
+        );
+
+    if(!clean.length)
+        return null;
+
+    return clean.reduce(
+        (sum,value) =>
+            sum + value,
+        0
+    ) / clean.length;
+
+}
 
 
- for(const arr of arrays){
+function normalize(value){
 
-  for(let i=0;i<arr.length;i++){
-
-   const item=arr[i];
-
-   const type=String(
-    first(
-     item?.type,
-     item?.side,
-     item?.position,
-     item?.homeAway,
-     item?.home_away
-    )||""
-   ).toLowerCase();
-
-
-   if(
-    (
-     side==="home" &&
-     /home|^1$/.test(type)
+    return String(
+        value || ""
     )
-    ||
-    (
-     side==="away" &&
-     /away|^2$/.test(type)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(
+        /[\u0300-\u036f]/g,
+        ""
     )
-   ){
+    .replace(
+        /[^a-z0-9а-яё]/gi,
+        ""
+    );
 
-    const o=item.team||item;
-    const name=objName(o);
+}
 
-    if(name){
 
-     return{
-      name,
-      logo:objLogo(o),
-      slug:objSlug(o),
-      raw:o
-     };
+/* =========================================================
+   OBJECT PARSERS
+========================================================= */
+
+function objectName(object){
+
+    if(!object)
+        return "";
+
+    if(
+        typeof object === "string"
+    )
+        return object.trim();
+
+    if(
+        typeof object !== "object"
+    )
+        return "";
+
+    return first(
+        object.name,
+        object.fullName,
+        object.full_name,
+        object.shortName,
+        object.short_name,
+        object.displayName,
+        object.display_name,
+        object.title,
+        object.teamName,
+        object.team_name,
+        object.label,
+        object.slug
+    ) || "";
+
+}
+
+
+function objectLogo(object){
+
+    if(
+        !object ||
+        typeof object !== "object"
+    )
+        return "";
+
+    return first(
+        object.logo,
+        object.logoUrl,
+        object.logo_url,
+        object.image,
+        object.imageUrl,
+        object.image_url,
+        object.badge,
+        object.crest,
+        object.icon
+    ) || "";
+
+}
+
+
+function objectSlug(object){
+
+    if(
+        !object ||
+        typeof object !== "object"
+    )
+        return "";
+
+    return first(
+        object.slug,
+        object.team_slug,
+        object.teamSlug
+    ) || "";
+
+}
+
+
+/* =========================================================
+   ROBUST TEAM PARSER
+========================================================= */
+
+function recursiveTeam(
+    match,
+    side
+){
+
+    const keys =
+        side === "home"
+
+        ? [
+            "home",
+            "hometeam",
+            "home_team",
+            "team1",
+            "participant1",
+            "competitor1"
+        ]
+
+        : [
+            "away",
+            "awayteam",
+            "away_team",
+            "team2",
+            "participant2",
+            "competitor2"
+        ];
+
+
+    for(
+        const key
+        of Object.keys(
+            match || {}
+        )
+    ){
+
+        const normalized =
+            key
+            .toLowerCase()
+            .replace(
+                /[-_\s]/g,
+                ""
+            );
+
+
+        if(
+            keys.some(
+                candidate =>
+                    normalized ===
+                    candidate.replace(
+                        /[-_\s]/g,
+                        ""
+                    )
+            )
+        ){
+
+            const object =
+                match[key];
+
+            const name =
+                objectName(object);
+
+            if(name){
+
+                return {
+                    name,
+                    logo:
+                        objectLogo(object),
+                    slug:
+                        objectSlug(object),
+                    raw:
+                        object
+                };
+
+            }
+
+        }
 
     }
 
-   }
 
-  }
+    const arrays = [
+
+        match?.participants,
+        match?.competitors,
+        match?.teams,
+        match?.opponents
+
+    ].filter(
+        Array.isArray
+    );
 
 
-  if(arr.length>=2){
+    for(
+        const array
+        of arrays
+    ){
 
-   const o=
-    arr[
-     side==="home"
-      ?0
-      :1
-    ]?.team
-    ||
-    arr[
-     side==="home"
-      ?0
-      :1
-    ];
+        for(
+            let index = 0;
+            index < array.length;
+            index++
+        ){
 
-   const name=objName(o);
+            const item =
+                array[index];
 
-   if(name){
+            const itemSide =
+                String(
+                    first(
+                        item?.type,
+                        item?.side,
+                        item?.position,
+                        item?.homeAway,
+                        item?.home_away
+                    ) || ""
+                ).toLowerCase();
 
-    return{
-     name,
-     logo:objLogo(o),
-     slug:objSlug(o),
-     raw:o
+
+            const correctSide =
+
+                (
+                    side === "home" &&
+                    /home|^1$/.test(
+                        itemSide
+                    )
+                )
+
+                ||
+
+                (
+                    side === "away" &&
+                    /away|^2$/.test(
+                        itemSide
+                    )
+                );
+
+
+            if(correctSide){
+
+                const object =
+                    item.team ||
+                    item;
+
+                const name =
+                    objectName(object);
+
+                if(name){
+
+                    return {
+                        name,
+                        logo:
+                            objectLogo(object),
+                        slug:
+                            objectSlug(object),
+                        raw:
+                            object
+                    };
+
+                }
+
+            }
+
+        }
+
+
+        if(
+            array.length >= 2
+        ){
+
+            const index =
+                side === "home"
+                    ? 0
+                    : 1;
+
+            const object =
+                array[index]?.team ||
+                array[index];
+
+            const name =
+                objectName(object);
+
+            if(name){
+
+                return {
+                    name,
+                    logo:
+                        objectLogo(object),
+                    slug:
+                        objectSlug(object),
+                    raw:
+                        object
+                };
+
+            }
+
+        }
+
+    }
+
+
+    return {
+        name:"",
+        logo:"",
+        slug:"",
+        raw:null
     };
 
-   }
-
-  }
-
- }
+}
 
 
- return{
-  name:"",
-  logo:"",
-  slug:"",
-  raw:null
- };
+/* =========================================================
+   GET MATCH ARRAY
+========================================================= */
+
+function getMatchArray(raw){
+
+    if(
+        Array.isArray(raw)
+    )
+        return raw;
+
+
+    const candidates = [
+
+        raw?.matches,
+        raw?.events,
+        raw?.results,
+        raw?.fixtures,
+        raw?.games,
+
+        raw?.data?.matches,
+        raw?.data?.events,
+        raw?.data?.results,
+        raw?.data?.fixtures,
+        raw?.data?.games,
+
+        raw?.data
+
+    ];
+
+
+    return (
+        candidates.find(
+            Array.isArray
+        )
+        ||
+        []
+    );
 
 }
 
 
-/* =====================================================
+/* =========================================================
    MATCH PARSER
-===================================================== */
+========================================================= */
 
-function getArray(raw){
+function parseMatch(
+    raw,
+    index = 0
+){
 
- if(Array.isArray(raw))
-  return raw;
+    const homeObject =
+        recursiveTeam(
+            raw,
+            "home"
+        );
 
-
- const candidates=[
-
-  raw?.matches,
-  raw?.events,
-  raw?.results,
-  raw?.fixtures,
-  raw?.games,
-
-  raw?.data?.matches,
-  raw?.data?.events,
-  raw?.data?.results,
-  raw?.data?.fixtures,
-  raw?.data?.games,
-
-  raw?.data
-
- ];
+    const awayObject =
+        recursiveTeam(
+            raw,
+            "away"
+        );
 
 
- return candidates.find(Array.isArray)||[];
+    const home =
+        first(
+            homeObject.name,
+
+            raw.home_name,
+            raw.homeName,
+            raw.home_team_name,
+            raw.homeTeamName,
+            raw.localteam_name,
+            raw.player1_name,
+
+            "Команда 1"
+        );
+
+
+    const away =
+        first(
+            awayObject.name,
+
+            raw.away_name,
+            raw.awayName,
+            raw.away_team_name,
+            raw.awayTeamName,
+            raw.visitorteam_name,
+            raw.player2_name,
+
+            "Команда 2"
+        );
+
+
+    const scoreObject =
+        raw.score ||
+        raw.scores ||
+        {};
+
+
+    const homeScore =
+        first(
+            raw.home_score,
+            raw.homeScore,
+            raw.score_home,
+            raw.scoreHome,
+            raw.localteam_score,
+
+            scoreObject.home,
+            scoreObject.homeScore,
+            scoreObject.home_score
+        );
+
+
+    const awayScore =
+        first(
+            raw.away_score,
+            raw.awayScore,
+            raw.score_away,
+            raw.scoreAway,
+            raw.visitorteam_score,
+
+            scoreObject.away,
+            scoreObject.awayScore,
+            scoreObject.away_score
+        );
+
+
+    const competition =
+        first(
+            raw.competition,
+            raw.league,
+            raw.tournament
+        );
+
+
+    const league =
+        first(
+            objectName(
+                competition
+            ),
+            raw.league_name,
+            raw.leagueName,
+            raw.competition_name,
+            raw.competitionName,
+            "Матч"
+        );
+
+
+    const status =
+        String(
+            first(
+                raw.status,
+                raw.state,
+                raw.match_status,
+                raw.matchStatus,
+                raw.status_name,
+                "scheduled"
+            )
+        ).toLowerCase();
+
+
+    const time =
+        first(
+            raw.start_time,
+            raw.startTime,
+            raw.start_at,
+            raw.datetime,
+            raw.date_time,
+            raw.date,
+            raw.time
+        );
+
+
+    return {
+
+        index,
+
+        id:
+            first(
+                raw.id,
+                raw.match_id,
+                raw.event_id,
+                raw.slug,
+                index
+            ),
+
+        slug:
+            first(
+                raw.slug,
+                raw.match_slug,
+                raw.matchSlug,
+                ""
+            ),
+
+        raw,
+
+        home,
+        away,
+
+        homeLogo:
+            homeObject.logo,
+
+        awayLogo:
+            awayObject.logo,
+
+        homeSlug:
+            first(
+                homeObject.slug,
+                raw.home_slug,
+                raw.home_team_slug,
+                ""
+            ),
+
+        awaySlug:
+            first(
+                awayObject.slug,
+                raw.away_slug,
+                raw.away_team_slug,
+                ""
+            ),
+
+        competitionSlug:
+            first(
+                objectSlug(
+                    competition
+                ),
+                raw.competition_slug,
+                raw.league_slug,
+                raw.tournament_slug,
+                ""
+            ),
+
+        homeScore,
+        awayScore,
+
+        league,
+        status,
+        time
+
+    };
 
 }
 
 
-function parseOne(m,i=0){
+function parseMatches(raw){
 
- const h=recursiveTeam(m,"home");
- const a=recursiveTeam(m,"away");
-
-
- const home=first(
-
-  h.name,
-
-  m.home_name,
-  m.homeName,
-  m.home_team_name,
-  m.homeTeamName,
-  m.localteam_name,
-  m.player1_name,
-
-  "Команда 1"
-
- );
-
-
- const away=first(
-
-  a.name,
-
-  m.away_name,
-  m.awayName,
-  m.away_team_name,
-  m.awayTeamName,
-  m.visitorteam_name,
-  m.player2_name,
-
-  "Команда 2"
-
- );
-
-
- const scores=
-  m.score||
-  m.scores||
-  {};
-
-
- const hs=first(
-
-  m.home_score,
-  m.homeScore,
-  m.score_home,
-  m.scoreHome,
-  m.localteam_score,
-
-  scores.home,
-  scores.homeScore,
-  scores.home_score
-
- );
-
-
- const as=first(
-
-  m.away_score,
-  m.awayScore,
-  m.score_away,
-  m.scoreAway,
-  m.visitorteam_score,
-
-  scores.away,
-  scores.awayScore,
-  scores.away_score
-
- );
-
-
- const comp=first(
-  m.competition,
-  m.league,
-  m.tournament
- );
-
-
- const league=first(
-
-  objName(comp),
-
-  m.league_name,
-  m.leagueName,
-  m.competition_name,
-  m.competitionName,
-
-  "Матч"
-
- );
-
-
- const competitionSlug=first(
-
-  objSlug(comp),
-
-  m.competition_slug,
-  m.league_slug,
-  m.tournament_slug,
-
-  ""
-
- );
-
-
- const status=String(
-
-  first(
-   m.status,
-   m.state,
-   m.match_status,
-   m.matchStatus,
-   m.status_name,
-   "scheduled"
-  )
-
- ).toLowerCase();
-
-
- const time=first(
-
-  m.start_time,
-  m.startTime,
-  m.start_at,
-  m.datetime,
-  m.date_time,
-  m.date,
-  m.time
-
- );
-
-
- return{
-
-  i,
-
-  id:first(
-   m.id,
-   m.match_id,
-   m.event_id,
-   m.slug,
-   i
-  ),
-
-  slug:first(
-   m.slug,
-   m.match_slug,
-   m.matchSlug,
-   ""
-  ),
-
-  raw:m,
-
-  home,
-  away,
-
-  homeLogo:h.logo,
-  awayLogo:a.logo,
-
-  homeSlug:first(
-   h.slug,
-   m.home_slug,
-   m.home_team_slug,
-   ""
-  ),
-
-  awaySlug:first(
-   a.slug,
-   m.away_slug,
-   m.away_team_slug,
-   ""
-  ),
-
-  competitionSlug,
-
-  hs,
-  as,
-
-  league,
-  status,
-  time
-
- };
+    return getMatchArray(raw)
+        .map(
+            (
+                match,
+                index
+            ) =>
+                parseMatch(
+                    match,
+                    index
+                )
+        );
 
 }
 
 
-function parse(raw){
-
- return getArray(raw)
-  .map(
-   (m,i)=>parseOne(m,i)
-  );
-
-}
-
-
-/* =====================================================
+/* =========================================================
    STATUS
-===================================================== */
+========================================================= */
 
-function isLive(s){
+function isLive(status){
 
- return /live|progress|quarter|period|half|1st|2nd|3rd|4th/.test(s);
-
-}
-
-function isDone(s){
-
- return /finished|final|ended|completed|full.?time|ft/.test(s);
-
-}
-
-function isUpcoming(s){
-
- return !isLive(s)&&!isDone(s);
+    return /live|progress|quarter|period|half|1st|2nd|3rd|4th/.test(
+        status
+    );
 
 }
 
 
-function dt(v){
+function isFinished(status){
 
- if(!v)
-  return "Время уточняется";
-
- const d=new Date(v);
-
- if(Number.isNaN(d.getTime()))
-  return String(v);
-
- return d.toLocaleString(
-  "ru-RU",
-  {
-   day:"2-digit",
-   month:"2-digit",
-   hour:"2-digit",
-   minute:"2-digit"
-  }
- );
+    return /finished|final|ended|completed|full.?time|ft/.test(
+        status
+    );
 
 }
 
 
-function score(v){
+function isUpcoming(status){
 
- return v===0||v
-  ?esc(v)
-  :"—";
+    return (
+        !isLive(status) &&
+        !isFinished(status)
+    );
 
 }
 
 
-/* =====================================================
-   FETCH
-===================================================== */
+/* =========================================================
+   DATE
+========================================================= */
+
+function formatDate(value){
+
+    if(!value)
+        return "Время уточняется";
+
+    const date =
+        new Date(value);
+
+    if(
+        Number.isNaN(
+            date.getTime()
+        )
+    )
+        return String(value);
+
+
+    return date.toLocaleString(
+        "ru-RU",
+        {
+            day:"2-digit",
+            month:"2-digit",
+            hour:"2-digit",
+            minute:"2-digit"
+        }
+    );
+
+}
+
+
+function formatTime(value){
+
+    if(!value)
+        return "—";
+
+    const date =
+        new Date(value);
+
+    if(
+        Number.isNaN(
+            date.getTime()
+        )
+    )
+        return String(value);
+
+
+    return date.toLocaleTimeString(
+        "ru-RU",
+        {
+            hour:"2-digit",
+            minute:"2-digit"
+        }
+    );
+
+}
+
+
+/* =========================================================
+   API
+========================================================= */
 
 async function getJSON(url){
 
- const r=await fetch(
-  url,
-  {
-   cache:"no-store"
-  }
- );
+    const response =
+        await fetch(
+            url,
+            {
+                cache:"no-store"
+            }
+        );
 
- if(!r.ok)
-  throw new Error(
-   "HTTP "+r.status
-  );
 
- return r.json();
+    if(
+        !response.ok
+    ){
+
+        throw new Error(
+            "HTTP " +
+            response.status
+        );
+
+    }
+
+
+    return response.json();
 
 }
 
 
 async function safeJSON(url){
 
- try{
+    try{
 
-  return await getJSON(url);
+        return await getJSON(
+            url
+        );
 
- }catch(e){
+    }
+    catch(error){
 
-  console.warn(
-   "API error:",
-   url,
-   e
-  );
+        console.warn(
+            "BET AI API:",
+            url,
+            error
+        );
 
-  return null;
+        return null;
 
- }
-
-}
-
-
-/* =====================================================
-   MAIN MATCH LIST
-===================================================== */
-
-async function load(){
-
- content.innerHTML=
-  `<div class="loading">
-    Получаю реальные события…
-   </div>`;
-
-
- try{
-
-  const raw=await getJSON(
-
-   `${SS}/matches/?sport=${encodeURIComponent(sport)}&limit=30&src=bet-ai`
-
-  );
-
-
-  matches=parse(raw);
-
-
-  settleJournal();
-
-  render();
-
-
-  document.getElementById("updated")
-   .textContent=
-   new Date()
-    .toLocaleTimeString(
-     "ru-RU",
-     {
-      hour:"2-digit",
-      minute:"2-digit"
-     }
-    );
-
-
- }catch(e){
-
-  console.error(e);
-
-  content.innerHTML=
-   `<div class="empty">
-     SportScore сейчас не ответил.
-     Обнови страницу через несколько секунд.
-    </div>`;
-
- }
+    }
 
 }
 
 
-/* =====================================================
-   RENDER MATCHES
-===================================================== */
+/* =========================================================
+   LOAD MATCHES
+========================================================= */
 
-function render(){
+async function loadMatches(){
 
- updateHeader();
+    const container =
+        document.getElementById(
+            "matches"
+        );
 
 
- document.getElementById("total")
-  .textContent=matches.length;
+    container.innerHTML = `
 
+        <div class="loading">
 
- document.getElementById("live")
-  .textContent=
-  matches.filter(
-   x=>isLive(x.status)
-  ).length;
+            <div class="loader"></div>
 
+            Получаю реальные события…
 
- if(view==="journal"){
-
-  renderJournal();
-
-  return;
-
- }
-
-
- let list=matches;
-
-
- if(view==="live")
-  list=list.filter(
-   x=>isLive(x.status)
-  );
-
-
- if(view==="finished")
-  list=list.filter(
-   x=>isDone(x.status)
-  );
-
-
- if(view==="upcoming")
-  list=list.filter(
-   x=>isUpcoming(x.status)
-  );
-
-
- document.getElementById("sectionTitle")
-  .textContent=
-
-  view==="live"
-   ?"LIVE"
-
-  :view==="finished"
-   ?"Завершённые"
-
-  :view==="upcoming"
-   ?"Предстоящие"
-
-  :"Матчи";
-
-
- if(!list.length){
-
-  content.innerHTML=
-   `<div class="empty">
-     Событий сейчас нет.
-    </div>`;
-
-  return;
-
- }
-
-
- content.innerHTML=
-  list.map(
-   m=>{
-
-    const i=matches.indexOf(m);
-
-    const live=isLive(m.status);
-    const done=isDone(m.status);
-
-
-    return`
-
-    <article class="match">
-
-     <div class="matchTop">
-
-      <div class="league">
-       ${esc(m.league)}
-      </div>
-
-      <div class="status ${live?"live":""}">
-       ${
-        live
-         ?"LIVE"
-        :done
-         ?"ЗАВЕРШЁН"
-        :"СКОРО"
-       }
-      </div>
-
-     </div>
-
-
-     <div class="teamRow">
-
-      <div class="team">
-       <span class="ball"></span>
-       <span>${esc(m.home)}</span>
-      </div>
-
-      <div class="score">
-       ${score(m.hs)}
-      </div>
-
-     </div>
-
-
-     <div class="teamRow">
-
-      <div class="team">
-       <span class="ball"></span>
-       <span>${esc(m.away)}</span>
-      </div>
-
-      <div class="score">
-       ${score(m.as)}
-      </div>
-
-     </div>
-
-
-     <div class="divider"></div>
-
-
-     <div class="meta">
-
-      <span>
-       ${esc(dt(m.time))}
-      </span>
-
-      <span>
-       ${esc(sport)}
-      </span>
-
-     </div>
-
-
-     <div class="actions">
-
-      <button
-       class="analyze"
-       onclick="openMatch(${i})"
-      >
-       ✦ Глубокий анализ
-      </button>
-
-      <button
-       class="save"
-       onclick="quickSave(${i})"
-      >
-       ☆
-      </button>
-
-     </div>
-
-    </article>
+        </div>
 
     `;
 
-   }
-  ).join("");
+
+    try{
+
+        const raw =
+            await getJSON(
+
+                `${SPORT_API}/matches/?sport=${encodeURIComponent(sport)}&limit=40&src=bet-ai-6`
+
+            );
+
+
+        matches =
+            parseMatches(raw);
+
+
+        settleJournal();
+
+
+        renderMatches();
+
+        updateDashboard();
+
+
+        document.getElementById(
+            "updated"
+        ).innerHTML = `
+
+            <span class="updated-dot"></span>
+
+            обновлено
+            ${new Date().toLocaleTimeString(
+                "ru-RU",
+                {
+                    hour:"2-digit",
+                    minute:"2-digit",
+                    second:"2-digit"
+                }
+            )}
+
+        `;
+
+    }
+    catch(error){
+
+        console.error(error);
+
+
+        container.innerHTML = `
+
+            <div class="empty">
+
+                Не удалось получить события SportScore.
+
+                <br><br>
+
+                Попробуй обновить страницу.
+
+            </div>
+
+        `;
+
+    }
 
 }
 
 
-/* =====================================================
+/* =========================================================
+   TEAM BADGE
+========================================================= */
+
+function badge(
+    name,
+    logo
+){
+
+    if(logo){
+
+        return `
+
+            <img
+                class="team-logo"
+                src="${esc(logo)}"
+                alt=""
+                onerror="
+                    this.style.display='none';
+                    this.nextElementSibling.style.display='grid';
+                "
+            >
+
+            <span
+                class="team-badge"
+                style="display:none"
+            >
+                ${esc(
+                    name
+                    .charAt(0)
+                    .toUpperCase()
+                )}
+            </span>
+
+        `;
+
+    }
+
+
+    return `
+
+        <span class="team-badge">
+
+            ${esc(
+                name
+                .charAt(0)
+                .toUpperCase()
+            )}
+
+        </span>
+
+    `;
+
+}
+
+
+/* =========================================================
+   RENDER MATCH LIST
+========================================================= */
+
+function renderMatches(){
+
+    const container =
+        document.getElementById(
+            "matches"
+        );
+
+
+    const dashboard =
+        document.getElementById(
+            "dashboard"
+        );
+
+    const journal =
+        document.getElementById(
+            "journal"
+        );
+
+
+    if(
+        currentView === "journal"
+    ){
+
+        dashboard.style.display =
+            "none";
+
+        journal.classList.add(
+            "show"
+        );
+
+        renderJournal();
+
+        return;
+
+    }
+
+
+    dashboard.style.display =
+        "";
+
+    journal.classList.remove(
+        "show"
+    );
+
+
+    let list =
+        [...matches];
+
+
+    if(
+        currentView === "live"
+    ){
+
+        list =
+            list.filter(
+                match =>
+                    isLive(
+                        match.status
+                    )
+            );
+
+    }
+
+
+    if(
+        currentView === "upcoming"
+    ){
+
+        list =
+            list.filter(
+                match =>
+                    isUpcoming(
+                        match.status
+                    )
+            );
+
+    }
+
+
+    if(
+        currentView === "finished"
+    ){
+
+        list =
+            list.filter(
+                match =>
+                    isFinished(
+                        match.status
+                    )
+            );
+
+    }
+
+
+    const title =
+        currentView === "live"
+
+        ? "LIVE матчи"
+
+        : currentView === "upcoming"
+
+        ? "Ближайшие матчи"
+
+        : currentView === "finished"
+
+        ? "Завершённые"
+
+        : "Ближайшие матчи";
+
+
+    document.getElementById(
+        "sectionTitle"
+    ).textContent =
+        title;
+
+
+    if(
+        !list.length
+    ){
+
+        container.innerHTML = `
+
+            <div class="empty">
+
+                В этой категории
+                сейчас нет событий.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    container.innerHTML =
+        list.map(
+            match => {
+
+                const originalIndex =
+                    matches.indexOf(
+                        match
+                    );
+
+
+                const live =
+                    isLive(
+                        match.status
+                    );
+
+
+                const finished =
+                    isFinished(
+                        match.status
+                    );
+
+
+                const status =
+
+                    live
+                    ? `<span class="live-pill">● LIVE</span>`
+
+                    : finished
+                    ? `<span class="match-time">FT</span>`
+
+                    : `<span class="match-time">${esc(formatTime(match.time))}</span>`;
+
+
+                return `
+
+                <article
+                    class="
+                        match-card
+                        ${live ? "live-card" : ""}
+                    "
+                    onclick="
+                        openAnalysis(
+                            ${originalIndex}
+                        )
+                    "
+                >
+
+                    <div class="match-top">
+
+                        <div>
+                            ${status}
+                        </div>
+
+                        <div class="match-league">
+
+                            ${esc(
+                                match.league
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="match-main">
+
+                        <div class="team-list">
+
+
+                            <div class="team-row">
+
+                                <div class="team-name">
+
+                                    ${badge(
+                                        match.home,
+                                        match.homeLogo
+                                    )}
+
+                                    <span class="team-name-text">
+
+                                        ${esc(
+                                            match.home
+                                        )}
+
+                                    </span>
+
+                                </div>
+
+                                <div class="match-score">
+
+                                    ${
+                                        match.homeScore === undefined ||
+                                        match.homeScore === null
+
+                                        ? "—"
+
+                                        : esc(
+                                            match.homeScore
+                                        )
+                                    }
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="team-row">
+
+                                <div class="team-name">
+
+                                    ${badge(
+                                        match.away,
+                                        match.awayLogo
+                                    )}
+
+                                    <span class="team-name-text">
+
+                                        ${esc(
+                                            match.away
+                                        )}
+
+                                    </span>
+
+                                </div>
+
+                                <div class="match-score">
+
+                                    ${
+                                        match.awayScore === undefined ||
+                                        match.awayScore === null
+
+                                        ? "—"
+
+                                        : esc(
+                                            match.awayScore
+                                        )
+                                    }
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="arrow">
+                            ›
+                        </div>
+
+                    </div>
+
+
+                    <div class="card-odds">
+
+                        <div class="card-odd">
+
+                            <small>
+                                1
+                            </small>
+
+                            <strong>
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="card-odd">
+
+                            <small>
+                                X
+                            </small>
+
+                            <strong>
+                                —
+                            </strong>
+
+                        </div>
+
+
+                        <div class="card-odd">
+
+                            <small>
+                                2
+                            </small>
+
+                            <strong>
+                                —
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+                `;
+
+            }
+        ).join("");
+
+}
+
+
+/* =========================================================
    TEAM HISTORY
-===================================================== */
-
-function resultForTeam(game,team){
-
- const g=parseOne(game);
-
-
- if(!isDone(g.status))
-  return null;
-
-
- const hs=num(g.hs);
- const as=num(g.as);
-
-
- if(hs===null||as===null)
-  return null;
-
-
- const n=normalize(team);
-
- const isHome=
-  normalize(g.home)===n;
-
- const isAway=
-  normalize(g.away)===n;
-
-
- if(!isHome&&!isAway)
-  return null;
-
-
- const gf=
-  isHome
-   ?hs
-   :as;
-
-
- const ga=
-  isHome
-   ?as
-   :hs;
-
-
- return{
-
-  result:
-   gf>ga
-    ?"W"
-   :gf<ga
-    ?"L"
-   :"D",
-
-  gf,
-  ga,
-
-  diff:gf-ga,
-
-  date:g.time,
-
-  home:isHome
-
- };
-
-}
-
-
-function historyStats(raw,team){
-
- const games=
-  getArray(raw)
-   .map(
-    x=>resultForTeam(x,team)
-   )
-   .filter(Boolean)
-   .slice(0,10);
-
-
- const recent=
-  games.slice(0,5);
-
-
- if(!games.length){
-
-  return{
-
-   games:[],
-   recent:[],
-
-   score:null,
-
-   wins:0,
-   losses:0,
-   draws:0,
-
-   gf:null,
-   ga:null,
-   diff:null
-
-  };
-
- }
-
-
- const wins=
-  games.filter(
-   x=>x.result==="W"
-  ).length;
-
-
- const losses=
-  games.filter(
-   x=>x.result==="L"
-  ).length;
-
-
- const draws=
-  games.filter(
-   x=>x.result==="D"
-  ).length;
-
-
- const pts=
-  games.reduce(
-   (s,x)=>
-    s+
-    (
-     x.result==="W"
-      ?3
-     :x.result==="D"
-      ?1
-      :0
-    ),
-   0
-  );
-
-
- return{
-
-  games,
-  recent,
-
-  score:
-   Math.round(
-    pts/
-    (games.length*3)*
-    100
-   ),
-
-  wins,
-  losses,
-  draws,
-
-  gf:avg(
-   games.map(
-    x=>x.gf
-   )
-  ),
-
-  ga:avg(
-   games.map(
-    x=>x.ga
-   )
-  ),
-
-  diff:avg(
-   games.map(
-    x=>x.diff
-   )
-  )
-
- };
-
-}
-
-
-function formHTML(a){
-
- if(!a.length){
-
-  return`
-   <div class="small">
-    Нет подтверждённых завершённых матчей.
-   </div>
-  `;
-
- }
-
-
- return`
-  <div class="form">
-
-   ${
-    a.map(
-     x=>`
-      <span class="${x.result.toLowerCase()}">
-       ${x.result}
-      </span>
-     `
-    ).join("")
-   }
-
-  </div>
- `;
-
-}
-
-
-/* =====================================================
-   H2H
-===================================================== */
-
-function h2hFromHistories(
- homeRaw,
- awayRaw,
- m
+========================================================= */
+
+function teamResult(
+    rawMatch,
+    teamName
 ){
 
- const all=[
-  ...getArray(homeRaw),
-  ...getArray(awayRaw)
- ];
-
-
- const seen=new Set();
- const out=[];
-
-
- for(const x of all){
-
-  const g=parseOne(x);
-
-  const key=String(g.id);
-
-
-  if(seen.has(key))
-   continue;
-
-
-  seen.add(key);
-
-
-  if(!isDone(g.status))
-   continue;
-
-
-  const teams=[
-   normalize(g.home),
-   normalize(g.away)
-  ];
-
-
-  if(
-   teams.includes(
-    normalize(m.home)
-   )
-   &&
-   teams.includes(
-    normalize(m.away)
-   )
-  ){
-
-   out.push(g);
-
-  }
-
- }
-
-
- return out.slice(0,5);
-
-}
-
-
-/* =====================================================
-   ODDS
-===================================================== */
-
-function deepGames(o){
-
- if(!o)return[];
-
- if(Array.isArray(o))
-  return o;
-
- if(Array.isArray(o.games))
-  return o.games;
-
- if(Array.isArray(o.data))
-  return o.data;
-
- if(Array.isArray(o.events))
-  return o.events;
-
- return[];
-
-}
-
-
-function oddsTeams(g){
-
- const home=first(
-  g.home,
-  g.home_team,
-  g.homeTeam,
-  g.team1,
-  g.teams?.home
- );
-
-
- const away=first(
-  g.away,
-  g.away_team,
-  g.awayTeam,
-  g.team2,
-  g.teams?.away
- );
-
-
- return{
-
-  home:
-   objName(home)
-   ||
-   String(home||""),
-
-  away:
-   objName(away)
-   ||
-   String(away||"")
-
- };
-
-}
-
-
-function similarity(a,b){
-
- a=normalize(a);
- b=normalize(b);
-
-
- if(!a||!b)
-  return 0;
-
-
- if(a===b)
-  return 1;
-
-
- if(
-  a.includes(b)
-  ||
-  b.includes(a)
- )
-  return .85;
-
-
- const A=
-  new Set(
-   a.match(/.{1,3}/g)||[]
-  );
-
-
- const B=
-  new Set(
-   b.match(/.{1,3}/g)||[]
-  );
-
-
- let n=0;
-
-
- A.forEach(
-  x=>{
-   if(B.has(x))
-    n++;
-  }
- );
-
-
- return n/
-  Math.max(
-   A.size,
-   B.size,
-   1
-  );
-
-}
-
-
-function findOddsGame(raw,m){
-
- const games=deepGames(raw);
-
-
- let best=null;
- let bestScore=0;
-
-
- for(const g of games){
-
-  const t=oddsTeams(g);
-
-
-  const direct=
-   (
-    similarity(
-     t.home,
-     m.home
-    )
-    +
-    similarity(
-     t.away,
-     m.away
-    )
-   )/2;
-
-
-  const reverse=
-   (
-    similarity(
-     t.home,
-     m.away
-    )
-    +
-    similarity(
-     t.away,
-     m.home
-    )
-   )/2;
-
-
-  const s=
-   Math.max(
-    direct,
-    reverse
-   );
-
-
-  if(s>bestScore){
-
-   bestScore=s;
-   best=g;
-
-  }
-
- }
-
-
- return bestScore>=.55
-  ?best
-  :null;
-
-}
-
-
-function collectNumbers(
- o,
- path="",
- out=[]
-){
-
- if(!o||typeof o!=="object")
-  return out;
-
-
- for(
-  const [k,v]
-  of Object.entries(o)
- ){
-
-  const p=
-   (path+" "+k)
-   .toLowerCase();
-
-
-  if(
-   typeof v==="number"
-   &&
-   v>1
-   &&
-   v<100
-  ){
-
-   out.push({
-    path:p,
-    value:v
-   });
-
-  }
-
-  else if(
-   typeof v==="string"
-   &&
-   !isNaN(Number(v))
-   &&
-   Number(v)>1
-   &&
-   Number(v)<100
-  ){
-
-   out.push({
-    path:p,
-    value:Number(v)
-   });
-
-  }
-
-  else if(
-   v
-   &&
-   typeof v==="object"
-  ){
-
-   collectNumbers(
-    v,
-    p,
-    out
-   );
-
-  }
-
- }
-
-
- return out;
-
-}
-
-
-function extractOdds(g){
-
- if(!g)
-  return null;
-
-
- const nums=
-  collectNumbers(g);
-
-
- const pick=
-  re=>
-   nums.find(
-    x=>re.test(x.path)
-   )?.value
-   ||
-   null;
-
-
- const h=pick(
-  /home|team1|1x2.*1|moneyline.*1/
- );
-
-
- const a=pick(
-  /away|team2|1x2.*2|moneyline.*2/
- );
-
-
- const d=pick(
-  /draw|tie|1x2.*x/
- );
-
-
- if(!h&&!a&&!d)
-  return null;
-
-
- return{
-  home:h,
-  draw:d,
-  away:a
- };
-
-}
-
-
-function marketProb(o){
-
- if(!o?.home||!o?.away)
-  return null;
-
-
- const ih=1/o.home;
- const ia=1/o.away;
-
- const id=
-  o.draw
-   ?1/o.draw
-   :0;
-
-
- const total=
-  ih+
-  ia+
-  id;
-
-
- return{
-
-  home:
-   Math.round(
-    ih/total*100
-   ),
-
-  away:
-   Math.round(
-    ia/total*100
-   ),
-
-  draw:
-   o.draw
-    ?Math.round(
-      id/total*100
-     )
-    :null,
-
-  margin:
-   Math.round(
-    (total-1)*1000
-   )/10
-
- };
-
-}
-
-
-/* =====================================================
-   BET AI MODEL
-===================================================== */
-
-function buildAnalysis(
- m,
- hs,
- as,
- h2h,
- odds
-){
-
- let home=50;
- let evidence=0;
-
- let factors=[];
-
-
- /* FORM */
-
- if(
-  hs.score!==null
-  &&
-  as.score!==null
- ){
-
-  const diff=
-   hs.score-
-   as.score;
-
-
-  home+=diff*.16;
-
-
-  evidence+=30;
-
-
-  factors.push({
-
-   name:"Форма последних матчей",
-
-   home:
-    clamp(
-     Math.round(
-      50+diff/2
-     ),
-     10,
-     90
-    ),
-
-   text:
-    `${m.home}: ${hs.wins}W ${hs.draws}D ${hs.losses}L · `+
-    `${m.away}: ${as.wins}W ${as.draws}D ${as.losses}L`
-
-  });
-
- }
-
-
- /* SCORE DIFFERENCE */
-
- if(
-  hs.diff!==null
-  &&
-  as.diff!==null
- ){
-
-  const d=
-   hs.diff-
-   as.diff;
-
-
-  home+=
-   clamp(
-    d*3,
-    -10,
-    10
-   );
-
-
-  evidence+=20;
-
-
-  factors.push({
-
-   name:"Разница счёта",
-
-   home:
-    clamp(
-     Math.round(
-      50+d*5
-     ),
-     10,
-     90
-    ),
-
-   text:
-    `Средняя разница: `+
-    `${hs.diff.toFixed(1)} против `+
-    `${as.diff.toFixed(1)}`
-
-  });
-
- }
-
-
- /* ATTACK */
-
- if(
-  hs.gf!==null
-  &&
-  as.gf!==null
- ){
-
-  const attack=
-   hs.gf-
-   as.gf;
-
-
-  home+=
-   clamp(
-    attack*1.5,
-    -6,
-    6
-   );
-
-
-  evidence+=10;
-
-
-  factors.push({
-
-   name:"Результативность",
-
-   home:
-    clamp(
-     Math.round(
-      50+attack*3
-     ),
-     10,
-     90
-    ),
-
-   text:
-    `Средний результат: `+
-    `${hs.gf.toFixed(1)} против `+
-    `${as.gf.toFixed(1)}`
-
-  });
-
- }
-
-
- /* H2H */
-
- if(h2h.length){
-
-  let hw=0;
-  let aw=0;
-
-
-  h2h.forEach(
-   g=>{
-
-    const h=num(g.hs);
-    const a=num(g.as);
+    const match =
+        parseMatch(
+            rawMatch
+        );
 
 
     if(
-     h===null
-     ||
-     a===null
+        !isFinished(
+            match.status
+        )
     )
-     return;
+        return null;
 
 
-    const winner=
-     h>a
-      ?g.home
-     :h<a
-      ?g.away
-     :null;
+    const homeScore =
+        number(
+            match.homeScore
+        );
+
+    const awayScore =
+        number(
+            match.awayScore
+        );
 
 
     if(
-     normalize(winner)
-     ===
-     normalize(m.home)
+        homeScore === null ||
+        awayScore === null
     )
-     hw++;
+        return null;
+
+
+    const team =
+        normalize(
+            teamName
+        );
+
+
+    const home =
+        normalize(
+            match.home
+        );
+
+
+    const away =
+        normalize(
+            match.away
+        );
+
+
+    const isHomeTeam =
+        home === team;
+
+
+    const isAwayTeam =
+        away === team;
 
 
     if(
-     normalize(winner)
-     ===
-     normalize(m.away)
+        !isHomeTeam &&
+        !isAwayTeam
     )
-     aw++;
-
-   }
-  );
+        return null;
 
 
-  if(hw+aw){
-
-   const p=
-    hw/
-    (hw+aw)*
-    100;
+    const scored =
+        isHomeTeam
+        ? homeScore
+        : awayScore;
 
 
-   home+=
-    (p-50)*.08;
+    const conceded =
+        isHomeTeam
+        ? awayScore
+        : homeScore;
 
 
-   evidence+=10;
+    const result =
+        scored > conceded
+
+        ? "W"
+
+        : scored < conceded
+
+        ? "L"
+
+        : "D";
 
 
-   factors.push({
+    return {
 
-    name:"H2H",
+        result,
 
-    home:
-     Math.round(p),
+        scored,
 
-    text:
-     `Последние найденные очные: `+
-     `${hw} — ${aw}`
+        conceded,
 
-   });
+        diff:
+            scored -
+            conceded,
 
-  }
+        match
 
- }
-
-
- /* HOME CONTEXT */
-
- if(
-  [
-   "football",
-   "basketball",
-   "cricket"
-  ].includes(sport)
- ){
-
-  home+=2;
-
-  evidence+=5;
-
-
-  factors.push({
-
-   name:"Домашний фактор",
-
-   home:52,
-
-   text:
-    "Низкий вес; используется только как дополнительный контекст"
-
-  });
-
- }
-
-
- home=
-  clamp(
-   Math.round(home),
-   20,
-   80
-  );
-
-
- const away=
-  100-home;
-
-
- let pick=null;
-
-
- if(evidence>=45){
-
-  if(home>=57)
-   pick=m.home;
-
-  else if(home<=43)
-   pick=m.away;
-
-  else
-   pick=
-    "Преимущество не выявлено";
-
- }
-
-
- const mp=
-  marketProb(odds);
-
-
- let value=null;
-
-
- if(
-  mp
-  &&
-  pick
-  &&
-  pick!=="Преимущество не выявлено"
- ){
-
-  const model=
-   pick===m.home
-    ?home
-    :away;
-
-
-  const market=
-   pick===m.home
-    ?mp.home
-    :mp.away;
-
-
-  value=
-   model-
-   market;
-
- }
-
-
- return{
-
-  home,
-  away,
-
-  evidence:
-   clamp(
-    evidence,
-    0,
-    100
-   ),
-
-  factors,
-  pick,
-
-  market:mp,
-  value
-
- };
+    };
 
 }
 
 
-/* =====================================================
-   DEEP ANALYSIS
-===================================================== */
+/* =========================================================
+   HISTORY STATS
+========================================================= */
 
-async function openMatch(i){
+function historyStats(
+    raw,
+    team
+){
 
- const m=matches[i];
+    const results =
+        getMatchArray(raw)
 
+        .map(
+            item =>
+                teamResult(
+                    item,
+                    team
+                )
+        )
 
- document.getElementById("modal")
-  .classList.add("show");
+        .filter(Boolean)
 
+        .slice(
+            0,
+            10
+        );
 
- document.body.style.overflow="hidden";
 
+    const recent =
+        results.slice(
+            0,
+            5
+        );
 
- document.getElementById("detail")
-  .innerHTML=`
 
-  <div class="block">
+    if(
+        !results.length
+    ){
 
-   <h2>
-    Собираю данные
-   </h2>
+        return {
 
-   <div class="small">
-    Матч → команды → последние игры →
-    H2H → таблица → коэффициенты → модель.
-   </div>
+            results:[],
+            recent:[],
 
-   <div class="progress">
-    <div></div>
-   </div>
+            wins:0,
+            draws:0,
+            losses:0,
 
-  </div>
+            formScore:null,
 
- `;
+            scored:null,
+            conceded:null,
+            diff:null
 
+        };
 
- let detail=null;
- let homeRaw=null;
- let awayRaw=null;
- let standings=null;
- let oddsRaw=null;
-
-
- const matchSlug=
-  m.slug
-  ||
-  slugify(
-   `${m.home}-vs-${m.away}`
-  );
-
-
- const homeSlug=
-  m.homeSlug
-  ||
-  slugify(m.home);
-
-
- const awaySlug=
-  m.awaySlug
-  ||
-  slugify(m.away);
-
-
- [
-  detail,
-  homeRaw,
-  awayRaw,
-  standings
- ]=
- await Promise.all([
-
-  matchSlug
-   ?safeJSON(
-     `${SS}/match/?sport=${sport}&slug=${encodeURIComponent(matchSlug)}&src=bet-ai`
-    )
-   :null,
-
-  homeSlug
-   ?safeJSON(
-     `${SS}/team/?sport=${sport}&slug=${encodeURIComponent(homeSlug)}&limit=15&src=bet-ai`
-    )
-   :null,
-
-  awaySlug
-   ?safeJSON(
-     `${SS}/team/?sport=${sport}&slug=${encodeURIComponent(awaySlug)}&limit=15&src=bet-ai`
-    )
-   :null,
-
-  m.competitionSlug
-   ?safeJSON(
-     `${SS}/standings/?sport=${sport}&slug=${encodeURIComponent(m.competitionSlug)}&src=bet-ai`
-    )
-   :null
-
- ]);
-
-
- if(!oddsCache){
-
-  oddsCache=
-   await safeJSON(
-    ODDS
-   );
-
- }
-
-
- oddsRaw=
-  oddsCache;
-
-
- const hstats=
-  historyStats(
-   homeRaw,
-   m.home
-  );
-
-
- const astats=
-  historyStats(
-   awayRaw,
-   m.away
-  );
-
-
- const h2h=
-  h2hFromHistories(
-   homeRaw,
-   awayRaw,
-   m
-  );
-
-
- const og=
-  findOddsGame(
-   oddsRaw,
-   m
-  );
-
-
- const odds=
-  extractOdds(og);
-
-
- const a=
-  buildAnalysis(
-   m,
-   hstats,
-   astats,
-   h2h,
-   odds
-  );
-
-
- m.deep={
-
-  detail,
-  homeRaw,
-  awayRaw,
-  standings,
-
-  hstats,
-  astats,
-
-  h2h,
-  odds,
-
-  analysis:a
-
- };
-
-
- renderDetail(i);
-
-}
-
-
-/* =====================================================
-   DETAIL RENDER
-===================================================== */
-
-function renderDetail(i){
-
- const m=matches[i];
-
- const d=m.deep;
-
- const a=d.analysis;
-
- const odds=d.odds;
-
- const mp=a.market;
-
-
- let factors=
-  a.factors.map(
-   f=>`
-
-   <div class="factor">
-
-    <div class="factorTop">
-
-     <span>
-      ${esc(f.name)}
-     </span>
-
-     <b>
-      ${f.home} / ${100-f.home}
-     </b>
-
-    </div>
-
-    <div class="bar">
-
-     <div
-      class="fill"
-      style="width:${f.home}%"
-     ></div>
-
-    </div>
-
-    <div
-     class="small"
-     style="margin-top:5px"
-    >
-     ${esc(f.text)}
-    </div>
-
-   </div>
-
-   `
-  ).join("");
-
-
- let verdict;
-
-
- if(!a.pick){
-
-  verdict=
-   "Недостаточно подтверждённых данных для направления.";
-
- }
-
- else if(
-  a.pick===
-  "Преимущество не выявлено"
- ){
-
-  verdict=
-   "Стороны близки — явного преимущества модель не видит.";
-
- }
-
- else{
-
-  verdict=
-   `Статистическое преимущество: <b>${esc(a.pick)}</b>.`;
-
- }
-
-
- document.getElementById("detail")
-  .innerHTML=`
-
- <div class="hero">
-
-  <div class="heroLeague">
-   ${esc(m.league)}
-  </div>
-
-  <div class="vs">
-
-   <div class="club">
-    ${esc(m.home)}
-   </div>
-
-   <div class="bigScore">
-    ${score(m.hs)} : ${score(m.as)}
-   </div>
-
-   <div class="club">
-    ${esc(m.away)}
-   </div>
-
-  </div>
-
-  <div
-   class="meta"
-   style="margin-top:17px"
-  >
-
-   <span>
-    ${esc(dt(m.time))}
-   </span>
-
-   <span>
-    ${
-     isLive(m.status)
-      ?"LIVE"
-     :isDone(m.status)
-      ?"FT"
-     :"UPCOMING"
-    }
-   </span>
-
-  </div>
-
- </div>
-
-
- <div class="block ai">
-
-  <div class="aiLabel">
-   BET AI 5.0 • DATA MODEL
-  </div>
-
-  <h2>
-   Прогноз модели
-  </h2>
-
-
-  <div class="aiScore">
-
-   <div>
-
-    <div class="quality">
-     КАЧЕСТВО ДАННЫХ
-    </div>
-
-    <strong>
-     ${a.evidence}%
-    </strong>
-
-   </div>
-
-
-   <div style="text-align:right">
-
-    <div class="quality">
-     ${esc(m.home)}
-    </div>
-
-    <b>
-     ${a.home}
-    </b>
-
-    <div class="quality">
-     ${esc(m.away)} · ${a.away}
-    </div>
-
-   </div>
-
-  </div>
-
-
-  <div class="notice">
-
-   Числа ${a.home}/${a.away} —
-   <b>индекс модели</b>,
-   а не доказанная вероятность победы.
-
-  </div>
-
-
-  ${
-   factors
-   ||
-   `
-   <div class="notice">
-    Расширенной статистики недостаточно.
-    Значения не выдумываются.
-   </div>
-   `
-  }
-
-
-  <div class="pred">
-
-   <div class="predTitle">
-    ${verdict}
-   </div>
-
-   <div class="confidence">
-
-    ${
-     a.evidence>=70
-      ?"Хорошее покрытие данных"
-
-     :a.evidence>=45
-      ?"Среднее покрытие данных"
-
-     :"Низкое покрытие данных"
     }
 
-   </div>
 
-  </div>
-
- </div>
-
-
- <div class="block">
-
-  <h3>
-   Форма
-  </h3>
+    const wins =
+        results.filter(
+            item =>
+                item.result === "W"
+        ).length;
 
 
-  <div class="small">
-
-   ${esc(m.home)}
-   ·
-   ${d.hstats.games.length}
-   завершённых матчей найдено
-
-  </div>
+    const draws =
+        results.filter(
+            item =>
+                item.result === "D"
+        ).length;
 
 
-  ${formHTML(d.hstats.recent)}
+    const losses =
+        results.filter(
+            item =>
+                item.result === "L"
+        ).length;
 
 
-  <div
-   class="small"
-   style="margin-top:15px"
-  >
+    const points =
+        results.reduce(
+            (
+                total,
+                item
+            ) => {
 
-   ${esc(m.away)}
-   ·
-   ${d.astats.games.length}
-   завершённых матчей найдено
+                if(
+                    item.result === "W"
+                )
+                    return total + 3;
 
-  </div>
+                if(
+                    item.result === "D"
+                )
+                    return total + 1;
 
+                return total;
 
-  ${formHTML(d.astats.recent)}
-
-
-  <div
-   class="grid"
-   style="margin-top:15px"
-  >
-
-   <div class="metric">
-
-    <small>
-     ${esc(m.home)}
-    </small>
-
-    <strong>
-     ${
-      d.hstats.gf===null
-       ?"—"
-       :d.hstats.gf.toFixed(1)
-     }
-    </strong>
-
-    <div class="small">
-     ср. результат
-    </div>
-
-   </div>
+            },
+            0
+        );
 
 
-   <div class="metric">
+    return {
 
-    <small>
-     ${esc(m.away)}
-    </small>
+        results,
+        recent,
 
-    <strong>
-     ${
-      d.astats.gf===null
-       ?"—"
-       :d.astats.gf.toFixed(1)
-     }
-    </strong>
+        wins,
+        draws,
+        losses,
 
-    <div class="small">
-     ср. результат
-    </div>
+        formScore:
+            Math.round(
+                points /
+                (
+                    results.length *
+                    3
+                ) *
+                100
+            ),
 
-   </div>
+        scored:
+            average(
+                results.map(
+                    item =>
+                        item.scored
+                )
+            ),
 
-  </div>
+        conceded:
+            average(
+                results.map(
+                    item =>
+                        item.conceded
+                )
+            ),
 
- </div>
+        diff:
+            average(
+                results.map(
+                    item =>
+                        item.diff
+                )
+            )
+
+    };
+
+}
 
 
- <div class="block">
-
-  <h3>
+/* =========================================================
    H2H
-  </h3>
+========================================================= */
 
+function findH2H(
+    homeRaw,
+    awayRaw,
+    currentMatch
+){
 
-  ${
-   d.h2h.length
+    const combined = [
 
-   ?`
-    <div class="good">
-     <b>
-      Найдено очных матчей:
-      ${d.h2h.length}
-     </b>
-    </div>
-   `
+        ...getMatchArray(
+            homeRaw
+        ),
 
-   :`
-    <div class="small">
-     Подтверждённых очных матчей
-     в полученной истории не найдено.
-    </div>
-   `
-  }
+        ...getMatchArray(
+            awayRaw
+        )
 
- </div>
+    ];
 
 
- <div class="block">
+    const found = [];
 
-  <h3>
-   Коэффициенты букмекеров
-  </h3>
+    const used =
+        new Set();
 
 
-  ${
-   odds
+    for(
+        const raw
+        of combined
+    ){
 
-   ?`
+        const match =
+            parseMatch(raw);
 
-   <div class="odds">
 
-    <div class="odd">
+        const key =
+            String(
+                match.id
+            );
 
-     <small>
-      ${esc(m.home)}
-     </small>
 
-     <strong>
-      ${odds.home||"—"}
-     </strong>
+        if(
+            used.has(key)
+        )
+            continue;
 
-    </div>
 
+        used.add(key);
 
-    <div class="odd">
 
-     <small>
-      НИЧЬЯ
-     </small>
+        if(
+            !isFinished(
+                match.status
+            )
+        )
+            continue;
 
-     <strong>
-      ${odds.draw||"—"}
-     </strong>
 
-    </div>
+        const teams = [
 
+            normalize(
+                match.home
+            ),
 
-    <div class="odd">
+            normalize(
+                match.away
+            )
 
-     <small>
-      ${esc(m.away)}
-     </small>
+        ];
 
-     <strong>
-      ${odds.away||"—"}
-     </strong>
 
-    </div>
+        if(
+            teams.includes(
+                normalize(
+                    currentMatch.home
+                )
+            )
 
-   </div>
+            &&
 
+            teams.includes(
+                normalize(
+                    currentMatch.away
+                )
+            )
+        ){
 
-   ${
-    mp
+            found.push(
+                match
+            );
 
-    ?`
+        }
 
-     <div class="notice">
+    }
 
-      Рынок после нормализации маржи:
 
-      ${esc(m.home)}
-      ${mp.home}%
-
-      ${
-       mp.draw!==null
-        ?` · ничья ${mp.draw}%`
-        :""
-      }
-
-      ·
-
-      ${esc(m.away)}
-      ${mp.away}%.
-
-
-      Расчётная маржа:
-      ${mp.margin}%.
-
-     </div>
-
-    `
-
-    :""
-   }
-
-
-   ${
-    a.value!==null
-
-    ?`
-
-     <div class="notice">
-
-      <b>
-       Расхождение модели с рынком:
-      </b>
-
-      ${
-       a.value>0
-        ?"+"
-        :""
-      }
-
-      ${a.value.toFixed(1)}
-      п.п.
-
-      Это исследовательский показатель,
-      а не гарантия value/прибыли.
-
-     </div>
-
-    `
-
-    :""
-   }
-
-   `
-
-   :`
-
-    <div class="small">
-
-     Для этого события совпадающий
-     рынок 1.ML не найден.
-
-     BET AI не подставляет
-     выдуманный коэффициент.
-
-    </div>
-
-   `
-  }
-
- </div>
-
-
- <div class="block">
-
-  <h3>
-   Покрытие данных
-  </h3>
-
-
-  <div class="grid">
-
-   <div class="metric">
-
-    <small>
-     MATCH DETAIL
-    </small>
-
-    <strong>
-     ${d.detail?"✓":"—"}
-    </strong>
-
-   </div>
-
-
-   <div class="metric">
-
-    <small>
-     ФОРМА
-    </small>
-
-    <strong>
-     ${
-      d.hstats.games.length
-      &&
-      d.astats.games.length
-       ?"✓"
-       :"—"
-     }
-    </strong>
-
-   </div>
-
-
-   <div class="metric">
-
-    <small>
-     H2H
-    </small>
-
-    <strong>
-     ${d.h2h.length?"✓":"—"}
-    </strong>
-
-   </div>
-
-
-   <div class="metric">
-
-    <small>
-     ТАБЛИЦА
-    </small>
-
-    <strong>
-     ${d.standings?"✓":"—"}
-    </strong>
-
-   </div>
-
-
-   <div class="metric">
-
-    <small>
-     КОЭФФИЦИЕНТЫ
-    </small>
-
-    <strong>
-     ${odds?"✓":"—"}
-    </strong>
-
-   </div>
-
-
-   <div class="metric">
-
-    <small>
-     КАЧЕСТВО
-    </small>
-
-    <strong>
-     ${a.evidence}%
-    </strong>
-
-   </div>
-
-  </div>
-
- </div>
-
-
- <div class="block">
-
-  <h3>
-   ChatGPT анализ
-  </h3>
-
-  <div class="small">
-
-   Кнопка скопирует уже собранную
-   статистику матча для дополнительного
-   анализа в ChatGPT.
-
-  </div>
-
-
-  <button
-   class="copy"
-   onclick="copyForGPT(${i})"
-  >
-   📋 Скопировать анализ
-  </button>
-
-
-  <button
-   class="primary"
-   style="width:100%;margin-top:8px"
-   onclick="saveDeep(${i})"
-  >
-   ☆ Зафиксировать прогноз
-  </button>
-
- </div>
-
- `;
+    return found.slice(
+        0,
+        5
+    );
 
 }
 
 
-/* =====================================================
-   MODAL
-===================================================== */
+/* =========================================================
+   ANALYSIS MODEL
+========================================================= */
 
-function closeModal(){
+function analyzeMatch(
+    match,
+    homeStats,
+    awayStats,
+    h2h
+){
 
- document.getElementById("modal")
-  .classList.remove("show");
+    let homeIndex =
+        50;
 
- document.body.style.overflow="";
+    let evidence =
+        0;
+
+    const factors =
+        [];
+
+
+    /* FORM */
+
+    if(
+        homeStats.formScore !== null &&
+        awayStats.formScore !== null
+    ){
+
+        const difference =
+            homeStats.formScore -
+            awayStats.formScore;
+
+
+        homeIndex +=
+            difference *
+            0.16;
+
+
+        evidence +=
+            30;
+
+
+        factors.push({
+
+            name:
+                "Текущая форма",
+
+            value:
+                difference,
+
+            text:
+                `${homeStats.wins}W ${homeStats.draws}D ${homeStats.losses}L / ` +
+                `${awayStats.wins}W ${awayStats.draws}D ${awayStats.losses}L`
+
+        });
+
+    }
+
+
+    /* SCORE DIFFERENCE */
+
+    if(
+        homeStats.diff !== null &&
+        awayStats.diff !== null
+    ){
+
+        const difference =
+            homeStats.diff -
+            awayStats.diff;
+
+
+        homeIndex +=
+            clamp(
+                difference * 3,
+                -10,
+                10
+            );
+
+
+        evidence +=
+            20;
+
+
+        factors.push({
+
+            name:
+                "Разница результата",
+
+            value:
+                difference,
+
+            text:
+                `${homeStats.diff.toFixed(2)} / ${awayStats.diff.toFixed(2)}`
+
+        });
+
+    }
+
+
+    /* OFFENSE */
+
+    if(
+        homeStats.scored !== null &&
+        awayStats.scored !== null
+    ){
+
+        const difference =
+            homeStats.scored -
+            awayStats.scored;
+
+
+        homeIndex +=
+            clamp(
+                difference * 1.4,
+                -7,
+                7
+            );
+
+
+        evidence +=
+            10;
+
+
+        factors.push({
+
+            name:
+                "Результативность",
+
+            value:
+                difference,
+
+            text:
+                `${homeStats.scored.toFixed(2)} / ${awayStats.scored.toFixed(2)}`
+
+        });
+
+    }
+
+
+    /* DEFENSE */
+
+    if(
+        homeStats.conceded !== null &&
+        awayStats.conceded !== null
+    ){
+
+        const difference =
+            awayStats.conceded -
+            homeStats.conceded;
+
+
+        homeIndex +=
+            clamp(
+                difference * 1.2,
+                -5,
+                5
+            );
+
+
+        evidence +=
+            10;
+
+
+        factors.push({
+
+            name:
+                "Защита",
+
+            value:
+                difference,
+
+            text:
+                `${homeStats.conceded.toFixed(2)} / ${awayStats.conceded.toFixed(2)}`
+
+        });
+
+    }
+
+
+    /* H2H */
+
+    if(
+        h2h.length
+    ){
+
+        let homeWins = 0;
+        let awayWins = 0;
+
+
+        h2h.forEach(
+            game => {
+
+                const hs =
+                    number(
+                        game.homeScore
+                    );
+
+                const as =
+                    number(
+                        game.awayScore
+                    );
+
+
+                if(
+                    hs === null ||
+                    as === null ||
+                    hs === as
+                )
+                    return;
+
+
+                const winner =
+                    hs > as
+                    ? game.home
+                    : game.away;
+
+
+                if(
+                    normalize(winner) ===
+                    normalize(match.home)
+                )
+                    homeWins++;
+
+
+                if(
+                    normalize(winner) ===
+                    normalize(match.away)
+                )
+                    awayWins++;
+
+            }
+        );
+
+
+        if(
+            homeWins +
+            awayWins >
+            0
+        ){
+
+            const percentage =
+                homeWins /
+                (
+                    homeWins +
+                    awayWins
+                ) *
+                100;
+
+
+            homeIndex +=
+                (
+                    percentage -
+                    50
+                ) *
+                .08;
+
+
+            evidence +=
+                10;
+
+
+            factors.push({
+
+                name:
+                    "H2H",
+
+                value:
+                    homeWins -
+                    awayWins,
+
+                text:
+                    `${homeWins} / ${awayWins}`
+
+            });
+
+        }
+
+    }
+
+
+    /* HOME CONTEXT */
+
+    if(
+        [
+            "football",
+            "basketball",
+            "cricket"
+        ].includes(
+            sport
+        )
+    ){
+
+        homeIndex +=
+            2;
+
+        evidence +=
+            5;
+
+
+        factors.push({
+
+            name:
+                "Домашний фактор",
+
+            value:
+                2,
+
+            text:
+                "Низкий вес"
+
+        });
+
+    }
+
+
+    homeIndex =
+        clamp(
+            Math.round(
+                homeIndex
+            ),
+            20,
+            80
+        );
+
+
+    const awayIndex =
+        100 -
+        homeIndex;
+
+
+    let pick =
+        null;
+
+
+    if(
+        evidence >= 45
+    ){
+
+        if(
+            homeIndex >= 57
+        )
+            pick =
+                match.home;
+
+        else if(
+            homeIndex <= 43
+        )
+            pick =
+                match.away;
+
+        else
+            pick =
+                "Нет явного преимущества";
+
+    }
+
+
+    return {
+
+        homeIndex,
+        awayIndex,
+
+        evidence:
+            clamp(
+                evidence,
+                0,
+                100
+            ),
+
+        factors,
+        pick
+
+    };
 
 }
 
 
-/* =====================================================
-   JOURNAL STORAGE
-===================================================== */
+/* =========================================================
+   OPEN ANALYSIS
+========================================================= */
+
+async function openAnalysis(
+    index
+){
+
+    selectedMatch =
+        matches[index];
+
+
+    const page =
+        document.getElementById(
+            "analysisPage"
+        );
+
+
+    page.classList.add(
+        "show"
+    );
+
+
+    document.body.style.overflow =
+        "hidden";
+
+
+    const content =
+        document.getElementById(
+            "analysisContent"
+        );
+
+
+    content.innerHTML = `
+
+        <div class="loading"
+             style="margin-top:20px">
+
+            <div class="loader"></div>
+
+            BET AI собирает данные матча…
+
+            <br><br>
+
+            форма • история • H2H • модель
+
+        </div>
+
+    `;
+
+
+    const match =
+        selectedMatch;
+
+
+    const homeSlug =
+        match.homeSlug ||
+        normalize(
+            match.home
+        );
+
+
+    const awaySlug =
+        match.awaySlug ||
+        normalize(
+            match.away
+        );
+
+
+    const matchSlug =
+        match.slug;
+
+
+    const [
+        matchDetail,
+        homeRaw,
+        awayRaw,
+        standings
+    ] = await Promise.all([
+
+        matchSlug
+
+        ? safeJSON(
+            `${SPORT_API}/match/?sport=${encodeURIComponent(sport)}&slug=${encodeURIComponent(matchSlug)}&src=bet-ai-6`
+        )
+
+        : Promise.resolve(null),
+
+
+        safeJSON(
+            `${SPORT_API}/team/?sport=${encodeURIComponent(sport)}&slug=${encodeURIComponent(homeSlug)}&limit=15&src=bet-ai-6`
+        ),
+
+
+        safeJSON(
+            `${SPORT_API}/team/?sport=${encodeURIComponent(sport)}&slug=${encodeURIComponent(awaySlug)}&limit=15&src=bet-ai-6`
+        ),
+
+
+        match.competitionSlug
+
+        ? safeJSON(
+            `${SPORT_API}/standings/?sport=${encodeURIComponent(sport)}&slug=${encodeURIComponent(match.competitionSlug)}&src=bet-ai-6`
+        )
+
+        : Promise.resolve(null)
+
+    ]);
+
+
+    const homeStats =
+        historyStats(
+            homeRaw,
+            match.home
+        );
+
+
+    const awayStats =
+        historyStats(
+            awayRaw,
+            match.away
+        );
+
+
+    const h2h =
+        findH2H(
+            homeRaw,
+            awayRaw,
+            match
+        );
+
+
+    const analysis =
+        analyzeMatch(
+            match,
+            homeStats,
+            awayStats,
+            h2h
+        );
+
+
+    match.analysisData = {
+
+        matchDetail,
+        homeRaw,
+        awayRaw,
+        standings,
+
+        homeStats,
+        awayStats,
+
+        h2h,
+        analysis
+
+    };
+
+
+    renderAnalysis(
+        match
+    );
+
+}
+
+
+/* =========================================================
+   FORM HTML
+========================================================= */
+
+function formHTML(results){
+
+    if(
+        !results.length
+    ){
+
+        return `
+
+            <div
+                style="
+                    color:#6f82a3;
+                    font-size:9px;
+                    margin-top:7px;
+                "
+            >
+                данных нет
+            </div>
+
+        `;
+
+    }
+
+
+    return `
+
+        <div class="form-badges">
+
+            ${
+                results.map(
+                    result => `
+
+                        <span
+                            class="
+                                form-badge
+                                ${result.result.toLowerCase()}
+                            "
+                        >
+
+                            ${result.result}
+
+                        </span>
+
+                    `
+                ).join("")
+            }
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+   RENDER ANALYSIS
+========================================================= */
+
+function renderAnalysis(
+    match
+){
+
+    const data =
+        match.analysisData;
+
+
+    const home =
+        data.homeStats;
+
+
+    const away =
+        data.awayStats;
+
+
+    const analysis =
+        data.analysis;
+
+
+    const pick =
+        analysis.pick;
+
+
+    let grade =
+        "—";
+
+
+    if(
+        pick &&
+        pick !==
+        "Нет явного преимущества"
+    ){
+
+        grade =
+            analysis.evidence >= 75
+            ? "A"
+
+            : analysis.evidence >= 60
+            ? "B"
+
+            : "C";
+
+    }
+
+
+    const factorsHTML =
+        analysis.factors.length
+
+        ? analysis.factors.map(
+            factor => {
+
+                const className =
+                    factor.value > 0
+
+                    ? "positive"
+
+                    : factor.value < 0
+
+                    ? "negative"
+
+                    : "neutral";
+
+
+                const sign =
+                    factor.value > 0
+                    ? "+"
+                    : "";
+
+
+                return `
+
+                    <div class="factor">
+
+                        <span class="factor-name">
+
+                            ${esc(
+                                factor.name
+                            )}
+
+                        </span>
+
+                        <span
+                            class="
+                                factor-value
+                                ${className}
+                            "
+                        >
+
+                            ${sign}${Number(
+                                factor.value
+                            ).toFixed(1)}
+
+                        </span>
+
+                    </div>
+
+                `;
+
+            }
+        ).join("")
+
+        : `
+
+            <div
+                style="
+                    color:#7183a3;
+                    font-size:9px;
+                    line-height:1.5;
+                "
+            >
+                Недостаточно статистики
+                для факторного анализа.
+            </div>
+
+        `;
+
+
+    document.getElementById(
+        "analysisContent"
+    ).innerHTML = `
+
+
+        <!-- MATCH -->
+
+        <section class="analysis-match">
+
+            <div class="analysis-league">
+
+                ${esc(
+                    match.league
+                )}
+
+            </div>
+
+            <div class="analysis-time">
+
+                ${esc(
+                    formatDate(
+                        match.time
+                    )
+                )}
+
+            </div>
+
+
+            <div class="versus">
+
+
+                <div class="analysis-team">
+
+                    <div class="analysis-logo">
+
+                        ${
+                            match.homeLogo
+
+                            ? `<img src="${esc(match.homeLogo)}">`
+
+                            : esc(
+                                match.home
+                                .charAt(0)
+                            )
+                        }
+
+                    </div>
+
+                    <div class="analysis-team-name">
+
+                        ${esc(
+                            match.home
+                        )}
+
+                    </div>
+
+                    ${formHTML(
+                        home.recent
+                    )}
+
+                </div>
+
+
+                <div class="vs-box">
+
+                    <div class="vs-text">
+                        VS
+                    </div>
+
+                    <div class="vs-score">
+
+                        ${
+                            match.homeScore ??
+                            "—"
+                        }
+
+                        :
+
+                        ${
+                            match.awayScore ??
+                            "—"
+                        }
+
+                    </div>
+
+                </div>
+
+
+                <div class="analysis-team">
+
+                    <div class="analysis-logo">
+
+                        ${
+                            match.awayLogo
+
+                            ? `<img src="${esc(match.awayLogo)}">`
+
+                            : esc(
+                                match.away
+                                .charAt(0)
+                            )
+                        }
+
+                    </div>
+
+                    <div class="analysis-team-name">
+
+                        ${esc(
+                            match.away
+                        )}
+
+                    </div>
+
+                    ${formHTML(
+                        away.recent
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <div class="analysis-tabs">
+
+                <button class="analysis-tab active">
+                    Обзор
+                </button>
+
+                <button class="analysis-tab">
+                    Статистика
+                </button>
+
+                <button class="analysis-tab">
+                    H2H
+                </button>
+
+                <button class="analysis-tab">
+                    Форма
+                </button>
+
+                <button class="analysis-tab">
+                    Коэффициенты
+                </button>
+
+                <button class="analysis-tab">
+                    Прогноз
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- MODEL + MARKET -->
+
+        <div class="analysis-grid">
+
+
+            <section class="panel">
+
+                <div class="panel-title">
+
+                    Индекс модели BET AI
+
+                </div>
+
+
+                <div class="model-row">
+
+                    <div class="model-row-top">
+
+                        <span>
+                            ${esc(match.home)}
+                        </span>
+
+                        <strong>
+                            ${analysis.homeIndex}
+                        </strong>
+
+                    </div>
+
+                    <div class="model-bar">
+
+                        <div
+                            class="model-fill"
+                            style="
+                                width:
+                                ${analysis.homeIndex}%
+                            "
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="model-row">
+
+                    <div class="model-row-top">
+
+                        <span>
+                            ${esc(match.away)}
+                        </span>
+
+                        <strong>
+                            ${analysis.awayIndex}
+                        </strong>
+
+                    </div>
+
+                    <div class="model-bar">
+
+                        <div
+                            class="
+                                model-fill
+                                away
+                            "
+                            style="
+                                width:
+                                ${analysis.awayIndex}%
+                            "
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="confidence">
+
+                    <div class="confidence-top">
+
+                        <span>
+                            Покрытие данных
+                        </span>
+
+                        <strong>
+                            ${analysis.evidence}%
+                        </strong>
+
+                    </div>
+
+                    <div class="confidence-bar">
+
+                        <div
+                            class="confidence-fill"
+                            style="
+                                width:
+                                ${analysis.evidence}%
+                            "
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    style="
+                        margin-top:12px;
+                        color:#7789aa;
+                        font-size:8px;
+                        line-height:1.5;
+                    "
+                >
+
+                    Индекс модели —
+                    сравнительная оценка,
+                    а не калиброванная
+                    вероятность победы.
+
+                </div>
+
+            </section>
+
+
+            <section class="panel">
+
+                <div class="panel-title">
+
+                    Коэффициенты рынка
+
+                </div>
+
+
+                <div class="market-grid">
+
+                    <div class="market-odd">
+
+                        <small>
+                            1
+                        </small>
+
+                        <strong>
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="market-odd">
+
+                        <small>
+                            X
+                        </small>
+
+                        <strong>
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div class="market-odd">
+
+                        <small>
+                            2
+                        </small>
+
+                        <strong>
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    style="
+                        margin-top:13px;
+                        color:#7082a2;
+                        font-size:8px;
+                        line-height:1.5;
+                    "
+                >
+
+                    Реальный рынок
+                    для этого матча
+                    пока не подтверждён.
+
+                    BET AI не подставляет
+                    выдуманные коэффициенты.
+
+                </div>
+
+            </section>
+
+        </div>
+
+
+        <!-- FACTORS -->
+
+        <section class="panel"
+                 style="margin-top:9px">
+
+            <div class="panel-title">
+
+                Ключевые факторы
+
+            </div>
+
+            ${factorsHTML}
+
+        </section>
+
+
+        <!-- PREDICTION -->
+
+        <section class="prediction">
+
+            <div class="prediction-label">
+
+                ♛ ПРОГНОЗ BET AI 6.0
+
+            </div>
+
+
+            <div class="prediction-main">
+
+                <div class="grade">
+
+                    ${grade}
+
+                </div>
+
+
+                <div>
+
+                    <div class="prediction-title">
+
+                        ${
+                            !pick
+
+                            ? "Недостаточно данных"
+
+                            : pick ===
+                              "Нет явного преимущества"
+
+                            ? "Стороны близки"
+
+                            : esc(pick)
+                        }
+
+                    </div>
+
+
+                    <div class="prediction-sub">
+
+                        ${
+                            !pick
+
+                            ? "Модель не делает направление при низком покрытии данных."
+
+                            : pick ===
+                              "Нет явного преимущества"
+
+                            ? "Статистическая разница недостаточна для сильного направления."
+
+                            : `Статистическое преимущество по доступным данным. Покрытие ${analysis.evidence}%.`
+                        }
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- FORM -->
+
+        <section class="detail-section">
+
+            <div class="detail-title">
+
+                Форма
+
+            </div>
+
+
+            <div class="form-row">
+
+                <div class="form-name">
+
+                    ${esc(match.home)}
+                    ·
+                    ${home.results.length}
+                    матчей найдено
+
+                </div>
+
+                ${formHTML(
+                    home.recent
+                )}
+
+            </div>
+
+
+            <div class="form-row">
+
+                <div class="form-name">
+
+                    ${esc(match.away)}
+                    ·
+                    ${away.results.length}
+                    матчей найдено
+
+                </div>
+
+                ${formHTML(
+                    away.recent
+                )}
+
+            </div>
+
+
+            <div class="metrics">
+
+                <div class="metric">
+
+                    <small>
+                        ${esc(match.home)}
+                        · средний результат
+                    </small>
+
+                    <strong>
+
+                        ${
+                            home.scored === null
+
+                            ? "—"
+
+                            : home.scored.toFixed(
+                                2
+                            )
+                        }
+
+                    </strong>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <small>
+                        ${esc(match.away)}
+                        · средний результат
+                    </small>
+
+                    <strong>
+
+                        ${
+                            away.scored === null
+
+                            ? "—"
+
+                            : away.scored.toFixed(
+                                2
+                            )
+                        }
+
+                    </strong>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <small>
+                        ${esc(match.home)}
+                        · пропущено
+                    </small>
+
+                    <strong>
+
+                        ${
+                            home.conceded === null
+
+                            ? "—"
+
+                            : home.conceded.toFixed(
+                                2
+                            )
+                        }
+
+                    </strong>
+
+                </div>
+
+
+                <div class="metric">
+
+                    <small>
+                        ${esc(match.away)}
+                        · пропущено
+                    </small>
+
+                    <strong>
+
+                        ${
+                            away.conceded === null
+
+                            ? "—"
+
+                            : away.conceded.toFixed(
+                                2
+                            )
+                        }
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- H2H -->
+
+        <section class="detail-section">
+
+            <div class="detail-title">
+
+                H2H
+
+            </div>
+
+
+            ${
+                data.h2h.length
+
+                ? `
+
+                    <div
+                        style="
+                            color:#55e8b5;
+                            font-size:10px;
+                            font-weight:900;
+                        "
+                    >
+
+                        Найдено очных матчей:
+                        ${data.h2h.length}
+
+                    </div>
+
+                `
+
+                : `
+
+                    <div
+                        style="
+                            color:#7d8eaa;
+                            font-size:10px;
+                            line-height:1.6;
+                        "
+                    >
+
+                        Подтверждённых
+                        очных матчей
+                        в полученной истории
+                        не найдено.
+
+                    </div>
+
+                `
+            }
+
+        </section>
+
+
+        <!-- DATA COVERAGE -->
+
+        <section class="detail-section">
+
+            <div class="detail-title">
+
+                Покрытие данных
+
+            </div>
+
+
+            <div class="data-grid">
+
+
+                <div class="data-item">
+
+                    <small>
+                        MATCH
+                    </small>
+
+                    <strong class="${
+                        data.matchDetail
+                        ? "available"
+                        : "unavailable"
+                    }">
+
+                        ${
+                            data.matchDetail
+                            ? "✓"
+                            : "—"
+                        }
+
+                    </strong>
+
+                </div>
+
+
+                <div class="data-item">
+
+                    <small>
+                        ФОРМА
+                    </small>
+
+                    <strong class="${
+                        home.results.length &&
+                        away.results.length
+                        ? "available"
+                        : "unavailable"
+                    }">
+
+                        ${
+                            home.results.length &&
+                            away.results.length
+                            ? "✓"
+                            : "—"
+                        }
+
+                    </strong>
+
+                </div>
+
+
+                <div class="data-item">
+
+                    <small>
+                        H2H
+                    </small>
+
+                    <strong class="${
+                        data.h2h.length
+                        ? "available"
+                        : "unavailable"
+                    }">
+
+                        ${
+                            data.h2h.length
+                            ? "✓"
+                            : "—"
+                        }
+
+                    </strong>
+
+                </div>
+
+
+                <div class="data-item">
+
+                    <small>
+                        ТАБЛИЦА
+                    </small>
+
+                    <strong class="${
+                        data.standings
+                        ? "available"
+                        : "unavailable"
+                    }">
+
+                        ${
+                            data.standings
+                            ? "✓"
+                            : "—"
+                        }
+
+                    </strong>
+
+                </div>
+
+
+                <div class="data-item">
+
+                    <small>
+                        РЫНОК
+                    </small>
+
+                    <strong class="unavailable">
+
+                        —
+
+                    </strong>
+
+                </div>
+
+
+                <div class="data-item">
+
+                    <small>
+                        КАЧЕСТВО
+                    </small>
+
+                    <strong>
+
+                        ${analysis.evidence}%
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ACTIONS -->
+
+        <section class="detail-section">
+
+            <div class="detail-title">
+
+                Инструменты
+
+            </div>
+
+
+            <button
+                class="primary-button"
+                onclick="
+                    savePrediction()
+                "
+            >
+
+                ☆ Зафиксировать прогноз
+
+            </button>
+
+
+            <button
+                class="secondary-button"
+                onclick="
+                    copyAnalysis()
+                "
+            >
+
+                📋 Скопировать данные
+                для ChatGPT
+
+            </button>
+
+        </section>
+
+    `;
+
+}
+
+
+/* =========================================================
+   CLOSE ANALYSIS
+========================================================= */
+
+function closeAnalysis(){
+
+    document.getElementById(
+        "analysisPage"
+    ).classList.remove(
+        "show"
+    );
+
+
+    document.body.style.overflow =
+        "";
+
+}
+
+
+/* =========================================================
+   JOURNAL
+========================================================= */
+
+const JOURNAL_KEY =
+    "betai6_journal";
+
 
 function getJournal(){
 
- try{
+    try{
 
-  return JSON.parse(
-   localStorage.getItem(
-    "betai5_journal"
-   )
-   ||
-   "[]"
-  );
+        return JSON.parse(
+            localStorage.getItem(
+                JOURNAL_KEY
+            ) || "[]"
+        );
 
- }catch{
+    }
+    catch{
 
-  return[];
+        return [];
 
- }
+    }
+
+}
+
+
+function setJournal(
+    journal
+){
+
+    localStorage.setItem(
+        JOURNAL_KEY,
+        JSON.stringify(
+            journal.slice(
+                0,
+                500
+            )
+        )
+    );
+
+
+    updateDashboard();
 
 }
 
 
-function setJournal(j){
-
- localStorage.setItem(
-  "betai5_journal",
-  JSON.stringify(
-   j.slice(0,500)
-  )
- );
-
- updateHeader();
-
-}
-
+/* =========================================================
+   JOURNAL STATS
+========================================================= */
 
 function journalStats(){
 
- const j=getJournal();
+    const journal =
+        getJournal();
 
 
- const done=
-  j.filter(
-   x=>
-    [
-     "win",
-     "loss",
-     "push"
-    ].includes(x.result)
-  );
+    const completed =
+        journal.filter(
+            item =>
+                [
+                    "win",
+                    "loss",
+                    "push"
+                ].includes(
+                    item.result
+                )
+        );
 
 
- const wins=
-  done.filter(
-   x=>x.result==="win"
-  ).length;
+    const wins =
+        completed.filter(
+            item =>
+                item.result === "win"
+        ).length;
 
 
- const losses=
-  done.filter(
-   x=>x.result==="loss"
-  ).length;
+    const losses =
+        completed.filter(
+            item =>
+                item.result === "loss"
+        ).length;
 
 
- const pushes=
-  done.filter(
-   x=>x.result==="push"
-  ).length;
+    const pushes =
+        completed.filter(
+            item =>
+                item.result === "push"
+        ).length;
 
 
- let profit=0;
- let staked=0;
+    const winRate =
+        wins + losses
+
+        ? Math.round(
+            wins /
+            (
+                wins +
+                losses
+            ) *
+            100
+        )
+
+        : null;
 
 
- done.forEach(
-  x=>{
+    return {
 
-   if(x.odds){
+        total:
+            journal.length,
 
-    staked++;
+        wins,
+        losses,
+        pushes,
 
+        winRate,
 
-    if(x.result==="win")
-     profit+=x.odds-1;
+        roi:null
 
-
-    else if(
-     x.result==="loss"
-    )
-     profit-=1;
-
-   }
-
-  }
- );
-
-
- return{
-
-  total:j.length,
-
-  wins,
-  losses,
-  pushes,
-
-  rate:
-   wins+losses
-    ?Math.round(
-      wins/
-      (wins+losses)*
-      100
-     )
-    :null,
-
-  roi:
-   staked
-    ?profit/staked*100
-    :null
-
- };
+    };
 
 }
 
 
-function updateHeader(){
-
- const s=
-  journalStats();
-
-
- document.getElementById("winrate")
-  .textContent=
-
-  s.rate===null
-   ?"—"
-   :s.rate+"%";
-
-}
-
-
-/* =====================================================
+/* =========================================================
    SAVE PREDICTION
-===================================================== */
+========================================================= */
 
-function quickSave(i){
+function savePrediction(){
 
- if(!matches[i].deep){
-
-  openMatch(i);
-
-  return;
-
- }
-
- saveDeep(i);
-
-}
+    if(
+        !selectedMatch ||
+        !selectedMatch.analysisData
+    )
+        return;
 
 
-function saveDeep(i){
-
- const m=matches[i];
-
- const a=
-  m.deep?.analysis;
+    const analysis =
+        selectedMatch
+        .analysisData
+        .analysis;
 
 
- if(
-  !a?.pick
-  ||
-  a.pick===
-  "Преимущество не выявлено"
- ){
+    if(
+        !analysis.pick ||
+        analysis.pick ===
+        "Нет явного преимущества"
+    ){
 
-  alert(
-   "Нет достаточно сильного направления для фиксации."
-  );
+        alert(
+            "Модель не видит достаточно сильного направления для фиксации."
+        );
 
-  return;
+        return;
 
- }
-
-
- const j=
-  getJournal();
+    }
 
 
- if(
-  j.some(
-   x=>
-    String(x.matchId)
-    ===
-    String(m.id)
-  )
- ){
-
-  alert(
-   "Матч уже сохранён."
-  );
-
-  return;
-
- }
+    const journal =
+        getJournal();
 
 
- const odd=
-
-  a.pick===m.home
-
-   ?m.deep.odds?.home
-
-   :m.deep.odds?.away;
-
-
- j.unshift({
-
-  id:Date.now(),
-
-  matchId:m.id,
-
-  sport,
-
-  home:m.home,
-  away:m.away,
-
-  pick:a.pick,
-
-  index:a.home,
-
-  evidence:a.evidence,
-
-  odds:odd||null,
-
-  created:
-   new Date()
-    .toISOString(),
-
-  result:null
-
- });
+    const exists =
+        journal.some(
+            item =>
+                String(
+                    item.matchId
+                ) ===
+                String(
+                    selectedMatch.id
+                )
+        );
 
 
- setJournal(j);
+    if(exists){
+
+        alert(
+            "Этот матч уже есть в журнале."
+        );
+
+        return;
+
+    }
 
 
- alert(
-  "Прогноз и текущий коэффициент зафиксированы."
- );
+    journal.unshift({
+
+        id:
+            Date.now(),
+
+        matchId:
+            selectedMatch.id,
+
+        sport,
+
+        home:
+            selectedMatch.home,
+
+        away:
+            selectedMatch.away,
+
+        pick:
+            analysis.pick,
+
+        homeIndex:
+            analysis.homeIndex,
+
+        awayIndex:
+            analysis.awayIndex,
+
+        evidence:
+            analysis.evidence,
+
+        created:
+            new Date()
+            .toISOString(),
+
+        result:null
+
+    });
+
+
+    setJournal(
+        journal
+    );
+
+
+    alert(
+        "Прогноз сохранён."
+    );
 
 }
 
 
-/* =====================================================
-   SETTLE
-===================================================== */
+/* =========================================================
+   SETTLE JOURNAL
+========================================================= */
 
 function settleJournal(){
 
- const j=getJournal();
+    const journal =
+        getJournal();
 
- let changed=false;
-
-
- for(const p of j){
-
-  if(p.result)
-   continue;
+    let changed =
+        false;
 
 
-  const m=
-   matches.find(
-    x=>
-     String(x.id)
-     ===
-     String(p.matchId)
-   );
+    journal.forEach(
+        prediction => {
+
+            if(
+                prediction.result
+            )
+                return;
 
 
-  if(
-   !m
-   ||
-   !isDone(m.status)
-  )
-   continue;
+            const match =
+                matches.find(
+                    item =>
+                        String(
+                            item.id
+                        ) ===
+                        String(
+                            prediction.matchId
+                        )
+                );
 
 
-  const h=num(m.hs);
-  const a=num(m.as);
+            if(
+                !match ||
+                !isFinished(
+                    match.status
+                )
+            )
+                return;
 
 
-  if(
-   h===null
-   ||
-   a===null
-  )
-   continue;
+            const homeScore =
+                number(
+                    match.homeScore
+                );
+
+            const awayScore =
+                number(
+                    match.awayScore
+                );
 
 
-  if(h===a){
-
-   p.result="push";
-
-  }
-
-  else{
-
-   p.result=
-
-    (
-     (
-      h>a
-       ?m.home
-       :m.away
-     )
-     ===
-     p.pick
-    )
-
-    ?"win"
-    :"loss";
-
-  }
+            if(
+                homeScore === null ||
+                awayScore === null
+            )
+                return;
 
 
-  changed=true;
+            if(
+                homeScore ===
+                awayScore
+            ){
 
- }
+                prediction.result =
+                    "push";
+
+            }
+            else{
+
+                const winner =
+                    homeScore >
+                    awayScore
+
+                    ? match.home
+                    : match.away;
 
 
- if(changed)
-  setJournal(j);
+                prediction.result =
+
+                    winner ===
+                    prediction.pick
+
+                    ? "win"
+
+                    : "loss";
+
+            }
+
+
+            changed =
+                true;
+
+        }
+    );
+
+
+    if(changed){
+
+        setJournal(
+            journal
+        );
+
+    }
 
 }
 
 
-/* =====================================================
-   JOURNAL UI
-===================================================== */
+/* =========================================================
+   RENDER JOURNAL
+========================================================= */
 
 function renderJournal(){
 
- document.getElementById(
-  "sectionTitle"
- ).textContent=
-  "Мои прогнозы";
+    const container =
+        document.getElementById(
+            "journal"
+        );
 
 
- const j=
-  getJournal();
+    const journal =
+        getJournal();
 
 
- const s=
-  journalStats();
+    const stats =
+        journalStats();
 
 
- let top=`
+    container.innerHTML = `
 
- <div
-  class="block"
-  style="margin-top:0"
- >
+        <div class="section-head">
 
-  <h3 style="margin-top:0">
-   Статистика
-  </h3>
+            <div class="section-title">
+                Мои прогнозы
+            </div>
 
+        </div>
 
-  <div class="grid">
 
-   <div class="metric">
+        <div class="journal-stats">
 
-    <small>
-     ВСЕГО
-    </small>
 
-    <strong>
-     ${s.total}
-    </strong>
+            <div class="stat">
 
-   </div>
+                <div class="stat-label">
+                    ВСЕГО
+                </div>
 
+                <div class="stat-value">
 
-   <div class="metric">
+                    ${stats.total}
 
-    <small>
-     WIN RATE
-    </small>
+                </div>
 
-    <strong>
-     ${
-      s.rate===null
-       ?"—"
-       :s.rate+"%"
-     }
-    </strong>
+            </div>
 
-   </div>
 
+            <div class="stat">
 
-   <div class="metric">
+                <div class="stat-label">
+                    WIN RATE
+                </div>
 
-    <small>
-     W / L
-    </small>
+                <div class="stat-value">
 
-    <strong>
-     ${s.wins} / ${s.losses}
-    </strong>
+                    ${
+                        stats.winRate === null
 
-   </div>
+                        ? "—"
 
+                        : stats.winRate +
+                          "%"
+                    }
 
-   <div class="metric">
+                </div>
 
-    <small>
-     ROI*
-    </small>
+            </div>
 
-    <strong>
-     ${
-      s.roi===null
-       ?"—"
-       :s.roi.toFixed(1)+"%"
-     }
-    </strong>
 
-   </div>
+            <div class="stat">
 
-  </div>
+                <div class="stat-label">
+                    W / L
+                </div>
 
+                <div class="stat-value">
 
-  <div class="notice">
+                    ${stats.wins}
+                    /
+                    ${stats.losses}
 
-   *ROI считается условно
-   при одинаковой ставке 1 единица
-   и только для записей
-   с сохранённым коэффициентом.
+                </div>
 
-  </div>
+            </div>
 
- </div>
 
- `;
+            <div class="stat">
 
+                <div class="stat-label">
+                    PUSH
+                </div>
 
- if(!j.length){
+                <div class="stat-value">
 
-  content.innerHTML=
-   top+
-   `
-    <div class="empty">
-     Прогнозов пока нет.
-    </div>
-   `;
+                    ${stats.pushes}
 
-  return;
+                </div>
 
- }
+            </div>
 
+        </div>
 
- content.innerHTML=
 
-  top+
+        ${
+            !journal.length
 
-  j.map(
-   p=>`
+            ? `
 
-   <div class="journalItem">
+                <div
+                    class="empty"
+                    style="margin-top:12px"
+                >
 
-    <div class="row">
+                    Сохранённых
+                    прогнозов пока нет.
 
-     <b>
-      ${esc(p.home)}
-      —
-      ${esc(p.away)}
-     </b>
+                </div>
 
+            `
 
-     <span
-      class="result ${p.result||""}"
-     >
+            : journal.map(
+                prediction => `
 
-      ${
-       p.result
-        ?p.result.toUpperCase()
-        :"OPEN"
-      }
+                    <div class="journal-item">
 
-     </span>
+                        <div class="journal-item-top">
 
-    </div>
+                            <div class="journal-match">
 
+                                ${esc(
+                                    prediction.home
+                                )}
 
-    <div
-     class="small"
-     style="margin-top:8px"
-    >
+                                —
 
-     Выбор:
-     <b>
-      ${esc(p.pick)}
-     </b>
+                                ${esc(
+                                    prediction.away
+                                )}
 
-    </div>
+                            </div>
 
 
-    <div class="small">
+                            <div
+                                class="
+                                    result
+                                    ${
+                                        prediction.result ||
+                                        ""
+                                    }
+                                "
+                            >
 
-     Коэффициент:
-     ${p.odds||"не найден"}
+                                ${
+                                    prediction.result
 
-     ·
+                                    ? prediction.result
+                                      .toUpperCase()
 
-     данные
-     ${p.evidence}%
+                                    : "OPEN"
+                                }
 
-    </div>
+                            </div>
 
+                        </div>
 
-    <div class="small">
 
-     ${
-      new Date(
-       p.created
-      ).toLocaleString(
-       "ru-RU"
-      )
-     }
+                        <div class="journal-info">
 
-    </div>
+                            Выбор:
+                            <b>
+                                ${esc(
+                                    prediction.pick
+                                )}
+                            </b>
 
-   </div>
+                            <br>
 
-   `
-  ).join("");
+                            Индекс:
+                            ${prediction.homeIndex}
+                            /
+                            ${prediction.awayIndex}
+
+                            ·
+
+                            покрытие
+                            ${prediction.evidence}%
+
+                            <br>
+
+                            ${
+                                new Date(
+                                    prediction.created
+                                )
+                                .toLocaleString(
+                                    "ru-RU"
+                                )
+                            }
+
+                        </div>
+
+                    </div>
+
+                `
+            ).join("")
+        }
+
+    `;
 
 }
 
 
-/* =====================================================
-   CHATGPT PACKAGE
-===================================================== */
+/* =========================================================
+   DASHBOARD
+========================================================= */
 
-async function copyForGPT(i){
+function updateDashboard(){
 
- const m=matches[i];
-
- const d=m.deep;
-
- const a=d.analysis;
+    const stats =
+        journalStats();
 
 
- const text=
+    document.getElementById(
+        "statMatches"
+    ).textContent =
+        matches.length;
 
-`Проведи независимый глубокий анализ матча.
+
+    document.getElementById(
+        "statLive"
+    ).textContent =
+        matches.filter(
+            match =>
+                isLive(
+                    match.status
+                )
+        ).length;
+
+
+    document.getElementById(
+        "statWinRate"
+    ).textContent =
+
+        stats.winRate === null
+
+        ? "—"
+
+        : stats.winRate +
+          "%";
+
+
+    document.getElementById(
+        "heroWinRate"
+    ).textContent =
+
+        stats.winRate === null
+
+        ? "—"
+
+        : stats.winRate +
+          "%";
+
+
+    document.getElementById(
+        "statROI"
+    ).textContent =
+        stats.roi === null
+        ? "—"
+        : stats.roi.toFixed(1) +
+          "%";
+
+}
+
+
+/* =========================================================
+   COPY ANALYSIS
+========================================================= */
+
+async function copyAnalysis(){
+
+    if(
+        !selectedMatch ||
+        !selectedMatch.analysisData
+    )
+        return;
+
+
+    const match =
+        selectedMatch;
+
+
+    const data =
+        match.analysisData;
+
+
+    const analysis =
+        data.analysis;
+
+
+    const text = `Проведи независимый глубокий анализ спортивного матча.
 
 Спорт: ${sport}
-Турнир: ${m.league}
-Матч: ${m.home} — ${m.away}
-Время: ${dt(m.time)}
+Турнир: ${match.league}
+Матч: ${match.home} — ${match.away}
+Время: ${formatDate(match.time)}
 
-Последние результаты ${m.home}: ${d.hstats.recent.map(x=>x.result).join(" ")||"нет"}
-Последние результаты ${m.away}: ${d.astats.recent.map(x=>x.result).join(" ")||"нет"}
+BET AI 6.0:
+Индекс: ${analysis.homeIndex}/${analysis.awayIndex}
+Покрытие данных: ${analysis.evidence}%
+Направление: ${analysis.pick || "нет"}
 
-${m.home}: средний результат ${d.hstats.gf?.toFixed(2)??"нет"}, средний пропущенный ${d.hstats.ga?.toFixed(2)??"нет"}
-${m.away}: средний результат ${d.astats.gf?.toFixed(2)??"нет"}, средний пропущенный ${d.astats.ga?.toFixed(2)??"нет"}
+${match.home}
+Форма: ${data.homeStats.recent.map(x => x.result).join(" ") || "нет"}
+Средний результат: ${data.homeStats.scored?.toFixed(2) ?? "нет"}
+Средний пропущенный: ${data.homeStats.conceded?.toFixed(2) ?? "нет"}
 
-H2H найдено: ${d.h2h.length}
+${match.away}
+Форма: ${data.awayStats.recent.map(x => x.result).join(" ") || "нет"}
+Средний результат: ${data.awayStats.scored?.toFixed(2) ?? "нет"}
+Средний пропущенный: ${data.awayStats.conceded?.toFixed(2) ?? "нет"}
 
-Коэффициенты:
-${m.home}: ${d.odds?.home??"нет"}
-Ничья: ${d.odds?.draw??"нет"}
-${m.away}: ${d.odds?.away??"нет"}
+H2H найдено: ${data.h2h.length}
 
-BET AI index: ${a.home}/${a.away}
-Качество данных: ${a.evidence}/100
-Направление модели: ${a.pick||"нет"}
+Важно:
+индекс BET AI не является калиброванной вероятностью.
 
-Не считай BET AI index вероятностью.
-
-Проверь актуальную форму, H2H, составы,
-травмы и отсутствия, домашние и выездные
-показатели, расписание, мотивацию
-и букмекерский рынок.
+Проверь свежие данные: форму, H2H, домашние/выездные показатели, составы, травмы, дисквалификации, расписание, мотивацию и актуальный букмекерский рынок.
 
 Не выдумывай отсутствующие данные.
-
-Укажи аргументы за и против основного
-сценария и уровень неопределённости.`;
+Укажи аргументы за и против каждого основного сценария и уровень неопределённости.`;
 
 
- try{
+    try{
 
-  await navigator.clipboard
-   .writeText(text);
+        await navigator
+        .clipboard
+        .writeText(
+            text
+        );
 
 
-  alert(
-   "Скопировано. Вставь сообщение в ChatGPT."
-  );
+        alert(
+            "Данные скопированы. Вставь их в ChatGPT."
+        );
 
- }
+    }
+    catch{
 
- catch{
+        prompt(
+            "Скопируй текст:",
+            text
+        );
 
-  prompt(
-   "Скопируй:",
-   text
-  );
-
- }
+    }
 
 }
 
 
-/* =====================================================
-   CONTROLS
-===================================================== */
+/* =========================================================
+   VIEW CONTROL
+========================================================= */
+
+function changeView(
+    view
+){
+
+    currentView =
+        view;
+
+
+    document.querySelectorAll(
+        ".nav-button"
+    ).forEach(
+        button => {
+
+            button.classList.toggle(
+                "active",
+                button.dataset.view ===
+                view
+            );
+
+        }
+    );
+
+
+    document.querySelectorAll(
+        ".bottom-button"
+    ).forEach(
+        button => {
+
+            button.classList.toggle(
+                "active",
+                button.dataset.bottom ===
+                view
+            );
+
+        }
+    );
+
+
+    renderMatches();
+
+
+    window.scrollTo(
+        {
+            top:0,
+            behavior:"smooth"
+        }
+    );
+
+}
+
+
+/* =========================================================
+   TOP NAV EVENTS
+========================================================= */
 
 document.querySelectorAll(
- ".sport"
+    ".nav-button"
 ).forEach(
+    button => {
 
- b=>b.onclick=()=>{
+        button.addEventListener(
+            "click",
+            () => {
 
-  document.querySelectorAll(
-   ".sport"
-  ).forEach(
-   x=>x.classList.remove(
-    "active"
-   )
-  );
+                changeView(
+                    button.dataset.view
+                );
 
+            }
+        );
 
-  b.classList.add(
-   "active"
-  );
-
-
-  sport=
-   b.dataset.sport;
-
-
-  view="all";
-
-
-  oddsCache=null;
-
-
-  document.querySelectorAll(
-   ".tab"
-  ).forEach(
-   x=>
-    x.classList.toggle(
-     "active",
-     x.dataset.view==="all"
-    )
-  );
-
-
-  load();
-
- }
-
+    }
 );
 
 
+/* =========================================================
+   BOTTOM NAV EVENTS
+========================================================= */
+
 document.querySelectorAll(
- ".tab"
+    ".bottom-button"
 ).forEach(
+    button => {
 
- b=>b.onclick=()=>{
+        button.addEventListener(
+            "click",
+            () => {
 
-  document.querySelectorAll(
-   ".tab"
-  ).forEach(
-   x=>x.classList.remove(
-    "active"
-   )
-  );
+                changeView(
+                    button.dataset.bottom
+                );
 
+            }
+        );
 
-  b.classList.add(
-   "active"
-  );
-
-
-  view=
-   b.dataset.view;
-
-
-  render();
-
- }
-
+    }
 );
 
 
-/* =====================================================
+/* =========================================================
+   SPORT EVENTS
+========================================================= */
+
+document.querySelectorAll(
+    ".sport-button"
+).forEach(
+    button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                document.querySelectorAll(
+                    ".sport-button"
+                ).forEach(
+                    item =>
+                        item.classList.remove(
+                            "active"
+                        )
+                );
+
+
+                button.classList.add(
+                    "active"
+                );
+
+
+                sport =
+                    button.dataset.sport;
+
+
+                currentView =
+                    "all";
+
+
+                document.querySelectorAll(
+                    ".nav-button"
+                ).forEach(
+                    item =>
+                        item.classList.toggle(
+                            "active",
+                            item.dataset.view ===
+                            "all"
+                        )
+                );
+
+
+                document.querySelectorAll(
+                    ".bottom-button"
+                ).forEach(
+                    item =>
+                        item.classList.toggle(
+                            "active",
+                            item.dataset.bottom ===
+                            "all"
+                        )
+                );
+
+
+                loadMatches();
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================================
+   ESC CLOSE
+========================================================= */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if(
+            event.key ===
+            "Escape"
+        ){
+
+            closeAnalysis();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
    START
-===================================================== */
+========================================================= */
 
-updateHeader();
+updateDashboard();
 
-load();
+loadMatches();
+
+
+/* =========================================================
+   AUTO UPDATE
+========================================================= */
 
 setInterval(
- load,
- 60000
+    () => {
+
+        if(
+            !document.getElementById(
+                "analysisPage"
+            ).classList.contains(
+                "show"
+            )
+        ){
+
+            loadMatches();
+
+        }
+
+    },
+    60000
 );
 
 </script>
