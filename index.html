@@ -1,361 +1,788 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#080b12">
-  <title>BET AI</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080b12">
+<title>BET AI</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
+<style>
+*{box-sizing:border-box}
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background:
-        radial-gradient(circle at 50% -10%, #172347 0%, transparent 38%),
-        #080b12;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at 50% -10%,#172347 0,transparent 34%),
+    #080b12;
+  color:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
 
-    .app {
-      max-width: 520px;
-      margin: auto;
-      padding: 26px 18px 50px;
-    }
+.app{
+  max-width:620px;
+  margin:auto;
+  padding:26px 16px 60px;
+}
 
-    .top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-    }
+.top,.row,.matchHead,.scoreRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
 
-    .logo {
-      font-size: 28px;
-      font-weight: 900;
-      letter-spacing: -1px;
-    }
+.logo{
+  font-size:29px;
+  font-weight:900;
+}
 
-    .logo span {
-      color: #7c8cff;
-    }
+.logo b{color:#7c8cff}
 
-    .live {
-      padding: 7px 11px;
-      border-radius: 20px;
-      background: rgba(53, 211, 153, .12);
-      color: #52e0a8;
-      font-size: 11px;
-      font-weight: 800;
-    }
+.live{
+  font-size:11px;
+  font-weight:800;
+  color:#52e0a8;
+  background:#16352d;
+  padding:7px 10px;
+  border-radius:99px;
+}
 
-    .subtitle {
-      color: #7e8ba8;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 1.4px;
-      margin-bottom: 8px;
-    }
+.eyebrow{
+  font-size:11px;
+  letter-spacing:1.5px;
+  color:#7886a5;
+  font-weight:800;
+  margin-top:28px;
+}
 
-    h1 {
-      margin: 0;
-      font-size: 34px;
-      line-height: 1.1;
-    }
+h1{
+  font-size:31px;
+  line-height:1.1;
+  margin:7px 0 9px;
+}
 
-    .description {
-      color: #99a5bd;
-      line-height: 1.5;
-      margin: 12px 0 26px;
-    }
+.muted{color:#8e9ab4}
 
-    .stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 30px;
-    }
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:9px;
+  margin:22px 0;
+}
 
-    .stat {
-      padding: 16px;
-      background: rgba(20, 27, 45, .9);
-      border: 1px solid rgba(255,255,255,.06);
-      border-radius: 18px;
-    }
+.stat{
+  background:#12192a;
+  border:1px solid #202a40;
+  border-radius:17px;
+  padding:14px;
+}
 
-    .stat small {
-      color: #7885a1;
-    }
+.stat small{
+  display:block;
+  color:#7886a5;
+  font-size:10px;
+}
 
-    .stat strong {
-      display: block;
-      margin-top: 8px;
-      font-size: 25px;
-    }
+.stat strong{
+  display:block;
+  font-size:23px;
+  margin-top:7px;
+}
 
-    .section-title {
-      font-size: 22px;
-      font-weight: 800;
-      margin: 0 0 14px;
-    }
+.filters{
+  display:flex;
+  gap:8px;
+  overflow:auto;
+  padding:2px 0 14px;
+  scrollbar-width:none;
+}
 
-    .match {
-      padding: 18px;
-      margin-bottom: 13px;
-      border-radius: 20px;
-      background: rgba(18, 25, 42, .94);
-      border: 1px solid rgba(255,255,255,.06);
-    }
+.filters::-webkit-scrollbar{display:none}
 
-    .match-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-    }
+.filter{
+  white-space:nowrap;
+  border:1px solid #273149;
+  background:#111827;
+  color:#aab5ce;
+  border-radius:99px;
+  padding:9px 13px;
+  font-weight:700;
+}
 
-    .league {
-      color: #7584a5;
-      font-size: 11px;
-      font-weight: 800;
-      margin-bottom: 6px;
-    }
+.filter.active{
+  background:#7180ff;
+  color:#fff;
+  border-color:#7180ff;
+}
 
-    .teams {
-      font-size: 18px;
-      font-weight: 800;
-    }
+.section{
+  font-size:21px;
+  font-weight:850;
+  margin:14px 0;
+}
 
-    .confidence {
-      height: fit-content;
-      padding: 7px 10px;
-      border-radius: 20px;
-      background: rgba(64, 218, 160, .12);
-      color: #59dfa9;
-      font-size: 11px;
-      font-weight: 800;
-    }
+.match{
+  background:#12192a;
+  border:1px solid #202a40;
+  border-radius:20px;
+  padding:16px;
+  margin:11px 0;
+}
 
-    .prediction {
-      margin-top: 18px;
-      padding: 14px;
-      border-radius: 14px;
-      background: #0c1220;
-    }
+.league{
+  font-size:10px;
+  color:#7180a0;
+  font-weight:800;
+  text-transform:uppercase;
+}
 
-    .prediction small {
-      color: #7885a1;
-    }
+.status{
+  font-size:10px;
+  font-weight:850;
+  color:#9ca9c4;
+  background:#0c1220;
+  padding:6px 8px;
+  border-radius:99px;
+}
 
-    .prediction strong {
-      display: block;
-      margin-top: 5px;
-      font-size: 17px;
-    }
+.status.liveNow{
+  color:#52e0a8;
+  background:#15352d;
+}
 
-    .probability {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 14px;
-      color: #9ba7c0;
-      font-size: 13px;
-    }
+.team{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:800;
+  font-size:16px;
+}
 
-    .probability b {
-      color: #fff;
-    }
+.team img{
+  width:30px;
+  height:30px;
+  object-fit:contain;
+}
 
-    .bar {
-      margin-top: 8px;
-      height: 7px;
-      background: #080d18;
-      border-radius: 20px;
-      overflow: hidden;
-    }
+.dot{
+  width:12px;
+  height:12px;
+  background:#7180ff;
+  border-radius:50%;
+}
 
-    .fill {
-      height: 100%;
-      border-radius: 20px;
-      background: linear-gradient(90deg, #697cff, #57dfaa);
-    }
+.score{
+  font-size:20px;
+  font-weight:900;
+}
 
-    .warning {
-      margin-top: 28px;
-      padding: 16px;
-      border-radius: 16px;
-      background: rgba(255,255,255,.035);
-      color: #6f7b94;
-      font-size: 11px;
-      line-height: 1.5;
-    }
+.scoreRow{margin-top:14px}
 
-    .refresh {
-      width: 100%;
-      margin-top: 18px;
-      border: 0;
-      border-radius: 15px;
-      padding: 15px;
-      background: #7180ff;
-      color: white;
-      font-size: 15px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-  </style>
+.divider{
+  height:1px;
+  background:#202a40;
+  margin:13px 0;
+}
+
+.meta{
+  display:flex;
+  justify-content:space-between;
+  color:#8490aa;
+  font-size:12px;
+}
+
+.empty,.error{
+  padding:24px;
+  text-align:center;
+  background:#111827;
+  border-radius:18px;
+  color:#8f9bb4;
+}
+
+.refresh{
+  width:100%;
+  border:0;
+  background:#7180ff;
+  color:#fff;
+  border-radius:15px;
+  padding:14px;
+  font-size:15px;
+  font-weight:850;
+  margin-top:14px;
+}
+
+.source{
+  text-align:center;
+  color:#64718e;
+  font-size:10px;
+  margin-top:18px;
+  line-height:1.5;
+}
+
+.skeleton{
+  height:155px;
+  border-radius:20px;
+  margin:11px 0;
+  background:linear-gradient(90deg,#111827,#172035,#111827);
+  background-size:200%;
+  animation:p 1.3s infinite;
+}
+
+@keyframes p{
+  to{background-position:-200%}
+}
+
+@media(max-width:390px){
+  .stat{padding:12px 10px}
+  .stat strong{font-size:20px}
+}
+</style>
 </head>
 
 <body>
 
-<div class="app">
+<main class="app">
 
-  <div class="top">
-    <div class="logo">BET <span>AI</span></div>
-    <div class="live">● LIVE</div>
+<div class="top">
+  <div class="logo">BET <b>AI</b></div>
+  <div class="live">● REAL DATA</div>
+</div>
+
+<div class="eyebrow">SPORTS DASHBOARD</div>
+
+<h1>
+  Матчи и статистика<br>
+  в реальном времени
+</h1>
+
+<div class="muted">
+  Счёт, статус и расписание загружаются автоматически.
+</div>
+
+<section class="stats">
+
+  <div class="stat">
+    <small>Матчей</small>
+    <strong id="total">—</strong>
   </div>
 
-  <div class="subtitle">AI SPORTS ANALYTICS</div>
-
-  <h1>Умный анализ<br>спортивных матчей</h1>
-
-  <p class="description">
-    Вероятности, статистика и аналитическая оценка матчей в одном месте.
-  </p>
-
-  <div class="stats">
-
-    <div class="stat">
-      <small>Матчей сегодня</small>
-      <strong>3</strong>
-    </div>
-
-    <div class="stat">
-      <small>Средняя вероятность</small>
-      <strong>78%</strong>
-    </div>
-
+  <div class="stat">
+    <small>Сейчас LIVE</small>
+    <strong id="live">—</strong>
   </div>
 
-  <div class="section-title">Прогнозы сегодня</div>
-
-  <div class="match">
-
-    <div class="match-head">
-      <div>
-        <div class="league">NBA</div>
-        <div class="teams">
-          Phoenix Suns<br>
-          Dallas Mavericks
-        </div>
-      </div>
-
-      <div class="confidence">ВЫСОКАЯ</div>
-    </div>
-
-    <div class="prediction">
-      <small>Прогноз модели</small>
-      <strong>Тотал больше 226.5</strong>
-    </div>
-
-    <div class="probability">
-      <span>Вероятность</span>
-      <b>81%</b>
-    </div>
-
-    <div class="bar">
-      <div class="fill" style="width:81%"></div>
-    </div>
-
+  <div class="stat">
+    <small>Завершено</small>
+    <strong id="finished">—</strong>
   </div>
 
-  <div class="match">
+</section>
 
-    <div class="match-head">
-      <div>
-        <div class="league">NBA</div>
-        <div class="teams">
-          Boston Celtics<br>
-          Miami Heat
-        </div>
-      </div>
+<div class="filters">
 
-      <div class="confidence">СРЕДНЯЯ+</div>
-    </div>
-
-    <div class="prediction">
-      <small>Прогноз модели</small>
-      <strong>Boston -4.5</strong>
-    </div>
-
-    <div class="probability">
-      <span>Вероятность</span>
-      <b>76%</b>
-    </div>
-
-    <div class="bar">
-      <div class="fill" style="width:76%"></div>
-    </div>
-
-  </div>
-
-  <div class="match">
-
-    <div class="match-head">
-      <div>
-        <div class="league">EUROLEAGUE</div>
-        <div class="teams">
-          Real Madrid<br>
-          Fenerbahçe
-        </div>
-      </div>
-
-      <div class="confidence">ВЫСОКАЯ</div>
-    </div>
-
-    <div class="prediction">
-      <small>Прогноз модели</small>
-      <strong>Real Madrid — победа</strong>
-    </div>
-
-    <div class="probability">
-      <span>Вероятность</span>
-      <b>79%</b>
-    </div>
-
-    <div class="bar">
-      <div class="fill" style="width:79%"></div>
-    </div>
-
-  </div>
-
-  <button class="refresh" onclick="refreshData()">
-    Обновить анализ
+  <button class="filter active" data-sport="basketball">
+    🏀 Баскетбол
   </button>
 
-  <div class="warning">
-    BET AI предоставляет аналитическую информацию, а не гарантирует результат.
-    Ставки на спорт связаны с риском потери денежных средств.
+  <button class="filter" data-sport="football">
+    ⚽ Футбол
+  </button>
+
+  <button class="filter" data-sport="tennis">
+    🎾 Теннис
+  </button>
+
+  <button class="filter" data-sport="cricket">
+    🏏 Крикет
+  </button>
+
+</div>
+
+<div class="row">
+
+  <div class="section">
+    Матчи
+  </div>
+
+  <div id="updated" class="muted"
+       style="font-size:11px">
   </div>
 
 </div>
 
+<div id="matches">
+
+  <div class="skeleton"></div>
+  <div class="skeleton"></div>
+
+</div>
+
+<button class="refresh" id="refresh">
+  Обновить данные
+</button>
+
+<div class="source">
+  BET AI отображает спортивные данные и не гарантирует
+  результат спортивных событий.
+</div>
+
+</main>
+
 <script>
-  function refreshData() {
-    const button = document.querySelector(".refresh");
 
-    button.innerText = "Анализируем...";
+let sport = "basketball";
 
-    setTimeout(() => {
-      button.innerText = "✓ Анализ обновлён";
+const box =
+document.getElementById("matches");
 
-      setTimeout(() => {
-        button.innerText = "Обновить анализ";
-      }, 1500);
-    }, 800);
+function esc(s){
+
+  return String(s ?? "")
+  .replace(/[&<>"']/g,c=>({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[c]));
+
+}
+
+function get(o,...keys){
+
+  for(const k of keys){
+
+    if(o && o[k] != null)
+      return o[k];
+
   }
+
+  return "";
+
+}
+
+function teamName(t,fallback){
+
+  return get(
+    t,
+    "name",
+    "shortName",
+    "title"
+  ) || fallback;
+
+}
+
+function teamLogo(t){
+
+  return get(
+    t,
+    "logo",
+    "image",
+    "badge",
+    "crest"
+  );
+
+}
+
+function normalize(raw){
+
+  const arr =
+    Array.isArray(raw)
+    ? raw
+    : (
+        raw.matches ||
+        raw.events ||
+        raw.data ||
+        raw.results ||
+        []
+      );
+
+  return arr.map(m=>{
+
+    const home =
+      get(
+        m,
+        "homeTeam",
+        "home",
+        "team1"
+      ) || {};
+
+    const away =
+      get(
+        m,
+        "awayTeam",
+        "away",
+        "team2"
+      ) || {};
+
+    const status =
+      String(
+        get(
+          m,
+          "status",
+          "state",
+          "matchStatus"
+        ) || ""
+      ).toLowerCase();
+
+    return {
+
+      league:
+        get(
+          m.league || {},
+          "name",
+          "title"
+        )
+        ||
+        get(
+          m,
+          "leagueName",
+          "competition"
+        )
+        ||
+        sport,
+
+      home:
+        teamName(
+          home,
+          get(
+            m,
+            "homeTeamName",
+            "home_name"
+          ) || "Home"
+        ),
+
+      away:
+        teamName(
+          away,
+          get(
+            m,
+            "awayTeamName",
+            "away_name"
+          ) || "Away"
+        ),
+
+      homeLogo:teamLogo(home),
+      awayLogo:teamLogo(away),
+
+      hs:
+        get(
+          m,
+          "homeScore",
+          "scoreHome",
+          "home_score"
+        )
+        ||
+        get(
+          m.score || {},
+          "home",
+          "homeScore"
+        ),
+
+      as:
+        get(
+          m,
+          "awayScore",
+          "scoreAway",
+          "away_score"
+        )
+        ||
+        get(
+          m.score || {},
+          "away",
+          "awayScore"
+        ),
+
+      status:status,
+
+      time:
+        get(
+          m,
+          "time",
+          "startTime",
+          "date",
+          "start_at"
+        )
+
+    };
+
+  });
+
+}
+
+function isLive(s){
+
+  return /live|in.?progress|1st|2nd|3rd|4th|half|quarter/
+  .test(s);
+
+}
+
+function isDone(s){
+
+  return /finished|final|ended|ft|completed/
+  .test(s);
+
+}
+
+function render(items){
+
+  document
+  .getElementById("total")
+  .textContent =
+  items.length;
+
+  document
+  .getElementById("live")
+  .textContent =
+  items.filter(
+    x=>isLive(x.status)
+  ).length;
+
+  document
+  .getElementById("finished")
+  .textContent =
+  items.filter(
+    x=>isDone(x.status)
+  ).length;
+
+  if(!items.length){
+
+    box.innerHTML =
+    '<div class="empty">' +
+    'Сейчас матчей в этой категории не найдено.' +
+    '</div>';
+
+    return;
+
+  }
+
+  box.innerHTML =
+  items.map(m=>{
+
+    const live =
+      isLive(m.status);
+
+    const done =
+      isDone(m.status);
+
+    const st =
+      live
+      ? "LIVE"
+      : done
+      ? "ЗАВЕРШЁН"
+      : (
+          m.status
+          ? m.status.toUpperCase()
+          : "ЗАПЛАНИРОВАН"
+        );
+
+    const logo = u =>
+      u
+      ? '<img src="' +
+        esc(u) +
+        '" alt="">'
+      : '<span class="dot"></span>';
+
+    const score = v =>
+      (v === 0 || v)
+      ? esc(v)
+      : "—";
+
+    let when = "";
+
+    if(m.time){
+
+      const d =
+        new Date(m.time);
+
+      when =
+        isNaN(d)
+        ? esc(m.time)
+        : d.toLocaleString(
+            "ru-RU",
+            {
+              day:"2-digit",
+              month:"2-digit",
+              hour:"2-digit",
+              minute:"2-digit"
+            }
+          );
+
+    }
+
+    return `
+
+    <article class="match">
+
+      <div class="matchHead">
+
+        <div class="league">
+          ${esc(m.league)}
+        </div>
+
+        <div class="status ${live ? "liveNow" : ""}">
+          ${esc(st)}
+        </div>
+
+      </div>
+
+      <div class="scoreRow">
+
+        <div class="team">
+          ${logo(m.homeLogo)}
+          ${esc(m.home)}
+        </div>
+
+        <div class="score">
+          ${score(m.hs)}
+        </div>
+
+      </div>
+
+      <div class="scoreRow">
+
+        <div class="team">
+          ${logo(m.awayLogo)}
+          ${esc(m.away)}
+        </div>
+
+        <div class="score">
+          ${score(m.as)}
+        </div>
+
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="meta">
+
+        <span>
+          ${when || "Время уточняется"}
+        </span>
+
+        <span>
+          ${esc(sport)}
+        </span>
+
+      </div>
+
+    </article>
+
+    `;
+
+  }).join("");
+
+}
+
+async function load(){
+
+  box.innerHTML =
+  '<div class="skeleton"></div>' +
+  '<div class="skeleton"></div>';
+
+  try{
+
+    const url =
+      "https://sportscore.com/api/widget/matches/" +
+      "?sport=" +
+      encodeURIComponent(sport) +
+      "&limit=30";
+
+    const r =
+      await fetch(
+        url,
+        {
+          cache:"no-store"
+        }
+      );
+
+    if(!r.ok)
+      throw new Error(
+        "HTTP " + r.status
+      );
+
+    const data =
+      await r.json();
+
+    render(
+      normalize(data)
+    );
+
+    document
+    .getElementById("updated")
+    .textContent =
+      "обновлено " +
+      new Date()
+      .toLocaleTimeString(
+        "ru-RU",
+        {
+          hour:"2-digit",
+          minute:"2-digit"
+        }
+      );
+
+  }
+
+  catch(e){
+
+    console.error(e);
+
+    box.innerHTML =
+      '<div class="error">' +
+      'Не удалось загрузить данные. ' +
+      'Нажми «Обновить данные» через несколько секунд.' +
+      '</div>';
+
+    document
+    .getElementById("total")
+    .textContent = "—";
+
+    document
+    .getElementById("live")
+    .textContent = "—";
+
+    document
+    .getElementById("finished")
+    .textContent = "—";
+
+  }
+
+}
+
+document
+.querySelectorAll(".filter")
+.forEach(b=>{
+
+  b.onclick = ()=>{
+
+    document
+    .querySelectorAll(".filter")
+    .forEach(
+      x=>x.classList.remove("active")
+    );
+
+    b.classList.add("active");
+
+    sport =
+      b.dataset.sport;
+
+    load();
+
+  };
+
+});
+
+document
+.getElementById("refresh")
+.onclick = load;
+
+load();
+
+setInterval(
+  load,
+  60000
+);
+
 </script>
 
 </body>
