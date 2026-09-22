@@ -2121,3092 +2121,3354 @@ a{
 
 
 <script>
+/* ============================================================
+   BET AI 7.0
+   MULTI-SOURCE INTELLIGENCE LAYER
 
-/* =========================================================
-   BET AI 6.1 — MULTI SOURCE DATA ENGINE
-   SportScore + 1.ML + fuzzy matching + fallbacks
-========================================================= */
+   Работает поверх BET AI 6.1.
+   Не ломает основной SportScore engine.
 
-const SS = "https://sportscore.com/api/widget";
-const ML = "https://1.ml/api/v1/odds";
+   Возможности:
+   - recursive data discovery
+   - enhanced fuzzy team matching
+   - H2H fallback
+   - standings fallback
+   - embedded odds fallback
+   - multiple bookmaker lines
+   - 1X2 / moneyline
+   - totals discovery
+   - spreads / handicap discovery
+   - bookmaker consensus
+   - no-vig probabilities
+   - source diagnostics
+   - data quality
+   - market disagreement detection
+   - automatic fallback
+   - safe failure
+============================================================ */
 
-const JOURNAL_KEY = "betai61_journal";
+console.log("BET AI 7.0 MULTI SOURCE ENGINE STARTED");
 
-let sport = "basketball";
-let currentView = "all";
-let matches = [];
-let selectedMatch = null;
-let oddsCache = null;
-let oddsCacheTime = 0;
-
-const deepCache = new Map();
+window.BETAI_VERSION = "7.0";
 
 
-/* =========================================================
-   UTILITIES
-========================================================= */
+/* ============================================================
+   SAFE HELPERS
+============================================================ */
 
-function esc(v){
-    return String(v ?? "").replace(/[&<>"']/g,c=>({
-        "&":"&amp;",
-        "<":"&lt;",
-        ">":"&gt;",
-        '"':"&quot;",
-        "'":"&#39;"
-    })[c]);
+function BA7_num(v){
+
+    if(v === null || v === undefined || v === ""){
+        return null;
+    }
+
+    if(typeof v === "string"){
+
+        let s = v
+            .trim()
+            .replace(",", ".");
+
+        if(!s) return null;
+
+        const n = Number(s);
+
+        return Number.isFinite(n)
+            ? n
+            : null;
+    }
+
+    const n = Number(v);
+
+    return Number.isFinite(n)
+        ? n
+        : null;
 }
 
-function first(...v){
-    return v.find(x=>x!==undefined && x!==null && x!=="");
-}
 
-function num(v){
-    if(v===null || v===undefined || v==="") return null;
-    const n=Number(v);
-    return Number.isFinite(n)?n:null;
-}
+function BA7_first(){
 
-function clamp(v,a,b){
-    return Math.max(a,Math.min(b,v));
-}
+    for(const v of arguments){
 
-function avg(arr){
-    const a=arr.filter(Number.isFinite);
-    return a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
-}
+        if(
+            v !== undefined &&
+            v !== null &&
+            v !== ""
+        ){
+            return v;
+        }
+    }
 
-function median(arr){
-    const a=arr.filter(Number.isFinite).sort((x,y)=>x-y);
-    if(!a.length) return null;
-    const m=Math.floor(a.length/2);
-    return a.length%2 ? a[m] : (a[m-1]+a[m])/2;
-}
-
-function sleep(ms){
-    return new Promise(r=>setTimeout(r,ms));
+    return null;
 }
 
 
-/* =========================================================
-   NAME NORMALIZATION
-========================================================= */
+function BA7_clamp(v,min,max){
 
-const STOP_WORDS = new Set([
-    "fc","cf","sc","ac","afc","bc",
-    "club","team",
-    "women","woman",
+    return Math.max(
+        min,
+        Math.min(max,v)
+    );
+}
+
+
+function BA7_average(values){
+
+    const a = values.filter(Number.isFinite);
+
+    if(!a.length){
+        return null;
+    }
+
+    return a.reduce(
+        (sum,x)=>sum+x,
+        0
+    ) / a.length;
+}
+
+
+function BA7_median(values){
+
+    const a = values
+        .filter(Number.isFinite)
+        .sort((a,b)=>a-b);
+
+    if(!a.length){
+        return null;
+    }
+
+    const m = Math.floor(a.length/2);
+
+    return a.length % 2
+        ? a[m]
+        : (a[m-1]+a[m])/2;
+}
+
+
+/* ============================================================
+   TEXT NORMALIZATION
+============================================================ */
+
+const BA7_STOP_WORDS = new Set([
+
+    "fc",
+    "cf",
+    "sc",
+    "ac",
+    "afc",
+    "bc",
+    "bk",
+
+    "club",
+    "team",
+
+    "women",
+    "woman",
+    "ladies",
+
     "men",
-    "u18","u19","u20","u21","u23",
-    "reserves"
+
+    "reserves",
+    "reserve",
+
+    "u17",
+    "u18",
+    "u19",
+    "u20",
+    "u21",
+    "u22",
+    "u23",
+
+    "the"
 ]);
 
-function cleanCountrySuffix(s){
-    return String(s||"")
-        .replace(/\((ecu|usa|uk|eng|esp|ger|fra|ita|bra|arg|mex|chi|col|per|uru|par|bol|ven|aus|can)\)/ig," ")
-        .replace(/\[(ecu|usa|uk|eng|esp|ger|fra|ita|bra|arg|mex)\]/ig," ");
-}
 
-function norm(s){
-    return cleanCountrySuffix(s)
+function BA7_normalize(name){
+
+    return String(name || "")
+
         .toLowerCase()
+
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g,"")
-        .replace(/&/g," and ")
-        .replace(/[^a-z0-9а-яё]+/gi," ")
+
+        .replace(
+            /[\u0300-\u036f]/g,
+            ""
+        )
+
+        .replace(
+            /\((ecu|usa|uk|eng|esp|ger|deu|fra|ita|bra|arg|mex|chi|col|per|uru|par|bol|ven|aus|can|phi|phl)\)/gi,
+            " "
+        )
+
+        .replace(
+            /\[(.*?)\]/g,
+            " "
+        )
+
+        .replace(
+            /&/g,
+            " and "
+        )
+
+        .replace(
+            /[^a-z0-9а-яё]+/gi,
+            " "
+        )
+
+        .replace(
+            /\s+/g,
+            " "
+        )
+
         .trim();
 }
 
-function compact(s){
-    return norm(s).replace(/\s+/g,"");
-}
 
-function tokens(s){
-    return norm(s)
-        .split(/\s+/)
+function BA7_tokens(name){
+
+    return BA7_normalize(name)
+        .split(" ")
         .filter(Boolean);
 }
 
-function meaningfulTokens(s){
-    const t=tokens(s);
-    const filtered=t.filter(x=>!STOP_WORDS.has(x));
-    return filtered.length ? filtered : t;
+
+function BA7_meaningfulTokens(name){
+
+    const all = BA7_tokens(name);
+
+    const clean = all.filter(
+        x => !BA7_STOP_WORDS.has(x)
+    );
+
+    return clean.length
+        ? clean
+        : all;
 }
 
-function slugify(s){
-    return norm(s)
-        .replace(/\s+/g,"-")
-        .replace(/^-+|-+$/g,"");
+
+function BA7_compact(name){
+
+    return BA7_normalize(name)
+        .replace(/\s+/g,"");
 }
 
-function levenshtein(a,b){
-    a=compact(a);
-    b=compact(b);
 
-    if(a===b) return 0;
+/* ============================================================
+   LEVENSHTEIN
+============================================================ */
+
+function BA7_levenshtein(a,b){
+
+    a = BA7_compact(a);
+    b = BA7_compact(b);
+
+    if(a === b) return 0;
+
     if(!a.length) return b.length;
     if(!b.length) return a.length;
 
-    const row=Array(b.length+1);
+    const row = new Array(
+        b.length + 1
+    );
 
-    for(let j=0;j<=b.length;j++) row[j]=j;
+    for(let j=0;j<=b.length;j++){
+        row[j]=j;
+    }
 
     for(let i=1;i<=a.length;i++){
-        let prev=row[0];
-        row[0]=i;
+
+        let previous = row[0];
+
+        row[0] = i;
 
         for(let j=1;j<=b.length;j++){
-            const temp=row[j];
 
-            row[j]=Math.min(
-                row[j]+1,
-                row[j-1]+1,
-                prev+(a[i-1]===b[j-1]?0:1)
+            const old = row[j];
+
+            row[j] = Math.min(
+
+                row[j] + 1,
+
+                row[j-1] + 1,
+
+                previous + (
+                    a[i-1] === b[j-1]
+                        ? 0
+                        : 1
+                )
             );
 
-            prev=temp;
+            previous = old;
         }
     }
 
     return row[b.length];
 }
 
-function similarity(a,b){
-    const A=compact(a);
-    const B=compact(b);
 
-    if(!A || !B) return 0;
-    if(A===B) return 1;
+/* ============================================================
+   TEAM SIMILARITY 7.0
+============================================================ */
 
-    if(A.includes(B) || B.includes(A)){
-        const ratio=Math.min(A.length,B.length)/Math.max(A.length,B.length);
-        return .78 + ratio*.20;
+function BA7_similarity(a,b){
+
+    const A = BA7_compact(a);
+    const B = BA7_compact(b);
+
+    if(!A || !B){
+        return 0;
     }
 
-    const at=meaningfulTokens(a);
-    const bt=meaningfulTokens(b);
+    if(A === B){
+        return 1;
+    }
 
-    const inter=at.filter(x=>bt.includes(x)).length;
-    const union=new Set([...at,...bt]).size;
+    if(
+        A.length >= 5 &&
+        B.length >= 5 &&
+        (
+            A.includes(B) ||
+            B.includes(A)
+        )
+    ){
 
-    const tokenScore=union ? inter/union : 0;
+        const ratio =
+            Math.min(A.length,B.length) /
+            Math.max(A.length,B.length);
 
-    const dist=levenshtein(A,B);
-    const lev=1-dist/Math.max(A.length,B.length);
+        return BA7_clamp(
+            .82 + ratio*.17,
+            0,
+            1
+        );
+    }
 
-    return clamp(tokenScore*.58+lev*.42,0,1);
+    const AT =
+        BA7_meaningfulTokens(a);
+
+    const BT =
+        BA7_meaningfulTokens(b);
+
+    let common = 0;
+
+    for(const token of AT){
+
+        if(BT.includes(token)){
+            common++;
+        }
+    }
+
+    const union =
+        new Set([
+            ...AT,
+            ...BT
+        ]).size;
+
+    const tokenScore =
+        union
+            ? common / union
+            : 0;
+
+    const distance =
+        BA7_levenshtein(A,B);
+
+    const levScore =
+        1 -
+        distance /
+        Math.max(
+            A.length,
+            B.length
+        );
+
+    return BA7_clamp(
+
+        tokenScore * .62 +
+        levScore * .38,
+
+        0,
+        1
+    );
 }
 
-function teamVariants(name){
-    const base=norm(name);
 
-    const values=new Set([
-        base,
-        slugify(base),
-        base.replace(/\b(fc|cf|sc|ac|afc|bc)\b/g," ").replace(/\s+/g," ").trim()
-    ]);
+/* ============================================================
+   TEAM VARIANTS
+============================================================ */
 
-    return [...values].filter(Boolean);
+function BA7_teamVariants(name){
+
+    const original =
+        BA7_normalize(name);
+
+    const set = new Set();
+
+    set.add(original);
+
+    set.add(
+        original
+            .replace(
+                /\b(fc|cf|sc|ac|afc|bc|bk)\b/g,
+                " "
+            )
+            .replace(/\s+/g," ")
+            .trim()
+    );
+
+    const meaningful =
+        BA7_meaningfulTokens(name)
+            .join(" ");
+
+    set.add(meaningful);
+
+    /*
+       Sporting Club aliases
+    */
+
+    if(
+        original.includes("sporting club")
+    ){
+
+        set.add(
+            original.replace(
+                "sporting club",
+                ""
+            ).trim()
+        );
+    }
+
+    /*
+       Example:
+       Barcelona SC -> Barcelona
+    */
+
+    const t =
+        BA7_meaningfulTokens(name);
+
+    if(t.length >= 1){
+
+        set.add(
+            t.join(" ")
+        );
+    }
+
+    return [...set]
+        .filter(Boolean);
 }
 
 
-/* =========================================================
-   NETWORK
-========================================================= */
+/* ============================================================
+   DEEP JSON WALKER
+============================================================ */
 
-async function fetchJSON(url, timeout=10000){
-    const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),timeout);
+function BA7_walk(root,maxDepth=12){
 
-    try{
-        const r=await fetch(url,{
-            cache:"no-store",
-            signal:controller.signal,
-            headers:{
-                "Accept":"application/json"
-            }
+    const result = [];
+
+    const seen =
+        new WeakSet();
+
+    function walk(value,depth,path){
+
+        if(
+            depth > maxDepth ||
+            value === null ||
+            typeof value !== "object"
+        ){
+            return;
+        }
+
+        if(seen.has(value)){
+            return;
+        }
+
+        seen.add(value);
+
+        result.push({
+            value,
+            path
         });
 
-        if(!r.ok) throw new Error("HTTP "+r.status);
+        if(Array.isArray(value)){
 
-        return await r.json();
-    } finally {
-        clearTimeout(timer);
+            for(
+                let i=0;
+                i<value.length;
+                i++
+            ){
+
+                walk(
+                    value[i],
+                    depth+1,
+                    path+"["+i+"]"
+                );
+            }
+
+        }else{
+
+            for(
+                const [key,val]
+                of Object.entries(value)
+            ){
+
+                walk(
+                    val,
+                    depth+1,
+                    path
+                        ? path+"."+key
+                        : key
+                );
+            }
+        }
     }
+
+    walk(
+        root,
+        0,
+        ""
+    );
+
+    return result;
 }
 
-async function safeJSON(url, timeout=10000){
+
+/* ============================================================
+   FIND ARRAYS RECURSIVELY
+============================================================ */
+
+function BA7_arrays(root){
+
+    return BA7_walk(root)
+        .filter(
+            x => Array.isArray(x.value)
+        )
+        .map(
+            x => x.value
+        );
+}
+
+
+/* ============================================================
+   MATCH OBJECT DETECTION
+============================================================ */
+
+function BA7_matchScore(o){
+
+    if(
+        !o ||
+        typeof o !== "object" ||
+        Array.isArray(o)
+    ){
+        return 0;
+    }
+
+    let points = 0;
+
     try{
-        return await fetchJSON(url,timeout);
-    }catch(e){
-        console.warn("BET AI source failed:",url,e);
-        return null;
-    }
-}
 
-
-/* =========================================================
-   GENERIC JSON WALKER
-========================================================= */
-
-function walkObjects(root,maxDepth=8){
-    const out=[];
-    const seen=new WeakSet();
-
-    function walk(v,d){
-        if(d>maxDepth || v===null || typeof v!=="object") return;
-        if(seen.has(v)) return;
-        seen.add(v);
-
-        if(!Array.isArray(v)) out.push(v);
-
-        if(Array.isArray(v)){
-            for(const x of v) walk(x,d+1);
-        }else{
-            for(const x of Object.values(v)) walk(x,d+1);
-        }
-    }
-
-    walk(root,0);
-    return out;
-}
-
-function walkArrays(root,maxDepth=8){
-    const out=[];
-    const seen=new WeakSet();
-
-    function walk(v,d){
-        if(d>maxDepth || v===null || typeof v!=="object") return;
-        if(seen.has(v)) return;
-        seen.add(v);
-
-        if(Array.isArray(v)){
-            out.push(v);
-            for(const x of v) walk(x,d+1);
-        }else{
-            for(const x of Object.values(v)) walk(x,d+1);
-        }
-    }
-
-    walk(root,0);
-    return out;
-}
-
-
-/* =========================================================
-   OBJECT HELPERS
-========================================================= */
-
-function objectName(o){
-    if(!o) return "";
-    if(typeof o==="string") return o.trim();
-    if(typeof o!=="object") return "";
-
-    return first(
-        o.name,
-        o.full_name,
-        o.fullName,
-        o.short_name,
-        o.shortName,
-        o.display_name,
-        o.displayName,
-        o.title,
-        o.team_name,
-        o.teamName,
-        o.label,
-        o.slug
-    ) || "";
-}
-
-function objectLogo(o){
-    if(!o || typeof o!=="object") return "";
-
-    return first(
-        o.logo,
-        o.logo_url,
-        o.logoUrl,
-        o.image,
-        o.image_url,
-        o.imageUrl,
-        o.badge,
-        o.crest,
-        o.icon
-    ) || "";
-}
-
-function objectSlug(o){
-    if(!o || typeof o!=="object") return "";
-
-    return first(
-        o.slug,
-        o.team_slug,
-        o.teamSlug
-    ) || "";
-}
-
-
-/* =========================================================
-   TEAM EXTRACTION
-========================================================= */
-
-function recursiveTeam(m,side){
-    if(!m || typeof m!=="object"){
-        return {name:"",logo:"",slug:"",raw:null};
-    }
-
-    const wanted=side==="home"
-        ? ["home","hometeam","home_team","homeTeam","team1","participant1","competitor1","localteam"]
-        : ["away","awayteam","away_team","awayTeam","team2","participant2","competitor2","visitorteam"];
-
-    const normalizedWanted=wanted.map(k=>k.toLowerCase().replace(/[_\-\s]/g,""));
-
-    for(const [key,value] of Object.entries(m)){
-        const nk=key.toLowerCase().replace(/[_\-\s]/g,"");
-
-        if(normalizedWanted.includes(nk)){
-            const o=value?.team || value;
-            const name=objectName(o);
-
-            if(name){
-                return {
-                    name,
-                    logo:objectLogo(o),
-                    slug:objectSlug(o),
-                    raw:o
-                };
-            }
-
-            if(typeof value==="string"){
-                return {
-                    name:value,
-                    logo:"",
-                    slug:"",
-                    raw:value
-                };
-            }
-        }
-    }
-
-    const arrays=[
-        m.participants,
-        m.competitors,
-        m.teams,
-        m.opponents
-    ].filter(Array.isArray);
-
-    for(const arr of arrays){
-        for(let i=0;i<arr.length;i++){
-            const item=arr[i];
-
-            const itemSide=String(first(
-                item?.side,
-                item?.type,
-                item?.position,
-                item?.homeAway,
-                item?.home_away
-            )||"").toLowerCase();
-
-            const correct=
-                side==="home"
-                    ? /home|local|^1$/.test(itemSide)
-                    : /away|visitor|^2$/.test(itemSide);
-
-            if(correct){
-                const o=item?.team || item;
-                const name=objectName(o);
-
-                if(name){
-                    return {
-                        name,
-                        logo:objectLogo(o),
-                        slug:objectSlug(o),
-                        raw:o
-                    };
-                }
-            }
-        }
-
-        if(arr.length>=2){
-            const o=(arr[side==="home"?0:1]?.team) || arr[side==="home"?0:1];
-            const name=objectName(o);
-
-            if(name){
-                return {
-                    name,
-                    logo:objectLogo(o),
-                    slug:objectSlug(o),
-                    raw:o
-                };
-            }
-        }
-    }
-
-    return {name:"",logo:"",slug:"",raw:null};
-}
-
-
-/* =========================================================
-   MATCH ARRAY DETECTION
-========================================================= */
-
-function matchLikelihood(o){
-    if(!o || typeof o!=="object" || Array.isArray(o)) return 0;
-
-    let s=0;
-
-    const h=recursiveTeam(o,"home").name;
-    const a=recursiveTeam(o,"away").name;
-
-    if(h) s+=3;
-    if(a) s+=3;
-
-    const keys=Object.keys(o).map(x=>x.toLowerCase());
-
-    if(keys.some(k=>k.includes("score"))) s++;
-    if(keys.some(k=>k.includes("status"))) s++;
-    if(keys.some(k=>k.includes("time")||k.includes("date"))) s++;
-
-    return s;
-}
-
-function getMatchArray(raw){
-    if(!raw) return [];
-
-    const direct=[
-        raw.matches,
-        raw.events,
-        raw.games,
-        raw.fixtures,
-        raw.results,
-        raw.data?.matches,
-        raw.data?.events,
-        raw.data?.games,
-        raw.data?.fixtures,
-        raw.data?.results,
-        Array.isArray(raw.data)?raw.data:null
-    ].filter(Array.isArray);
-
-    if(direct.length){
-        direct.sort((a,b)=>{
-            const sa=a.slice(0,8).reduce((n,x)=>n+matchLikelihood(x),0);
-            const sb=b.slice(0,8).reduce((n,x)=>n+matchLikelihood(x),0);
-            return sb-sa;
-        });
-
-        if(direct[0].some(x=>matchLikelihood(x)>=5)){
-            return direct[0];
-        }
-    }
-
-    const arrays=walkArrays(raw);
-
-    let best=[];
-    let score=-1;
-
-    for(const arr of arrays){
-        if(!arr.length) continue;
-
-        const sample=arr.slice(0,12);
-        const s=sample.reduce((n,x)=>n+matchLikelihood(x),0);
-
-        if(s>score && sample.some(x=>matchLikelihood(x)>=5)){
-            score=s;
-            best=arr;
-        }
-    }
-
-    return best;
-}
-
-
-/* =========================================================
-   SCORE EXTRACTION
-========================================================= */
-
-function scorePair(raw){
-    const score=raw?.score || raw?.scores || raw?.result || {};
-
-    let home=first(
-        raw?.home_score,
-        raw?.homeScore,
-        raw?.score_home,
-        raw?.scoreHome,
-        raw?.localteam_score,
-        score?.home,
-        score?.home_score,
-        score?.homeScore
-    );
-
-    let away=first(
-        raw?.away_score,
-        raw?.awayScore,
-        raw?.score_away,
-        raw?.scoreAway,
-        raw?.visitorteam_score,
-        score?.away,
-        score?.away_score,
-        score?.awayScore
-    );
-
-    if((home===undefined || away===undefined) && typeof score==="string"){
-        const m=score.match(/(\d+)\s*[-:]\s*(\d+)/);
-
-        if(m){
-            home=m[1];
-            away=m[2];
-        }
-    }
-
-    return {
-        home:num(home),
-        away:num(away)
-    };
-}
-
-
-/* =========================================================
-   PARSE MATCH
-========================================================= */
-
-function parseMatch(raw,index=0){
-    const h=recursiveTeam(raw,"home");
-    const a=recursiveTeam(raw,"away");
-
-    const home=first(
-        h.name,
-        raw?.home_name,
-        raw?.homeName,
-        raw?.home_team_name,
-        raw?.homeTeamName,
-        raw?.localteam_name,
-        raw?.player1_name,
-        "Команда 1"
-    );
-
-    const away=first(
-        a.name,
-        raw?.away_name,
-        raw?.awayName,
-        raw?.away_team_name,
-        raw?.awayTeamName,
-        raw?.visitorteam_name,
-        raw?.player2_name,
-        "Команда 2"
-    );
-
-    const sp=scorePair(raw);
-
-    const competition=first(
-        raw?.competition,
-        raw?.league,
-        raw?.tournament
-    );
-
-    const league=first(
-        objectName(competition),
-        raw?.competition_name,
-        raw?.competitionName,
-        raw?.league_name,
-        raw?.leagueName,
-        raw?.tournament_name,
-        "Матч"
-    );
-
-    const status=String(first(
-        raw?.status,
-        raw?.state,
-        raw?.match_status,
-        raw?.matchStatus,
-        raw?.status_name,
-        "scheduled"
-    )).toLowerCase();
-
-    const time=first(
-        raw?.start_time,
-        raw?.startTime,
-        raw?.start_at,
-        raw?.datetime,
-        raw?.date_time,
-        raw?.date,
-        raw?.time
-    );
-
-    return {
-        index,
-        id:first(raw?.id,raw?.match_id,raw?.event_id,raw?.slug,index),
-        slug:first(raw?.slug,raw?.match_slug,raw?.matchSlug,""),
-        raw,
-
-        home,
-        away,
-
-        homeLogo:h.logo,
-        awayLogo:a.logo,
-
-        homeSlug:first(h.slug,raw?.home_slug,raw?.home_team_slug,""),
-        awaySlug:first(a.slug,raw?.away_slug,raw?.away_team_slug,""),
-
-        competitionSlug:first(
-            objectSlug(competition),
-            raw?.competition_slug,
-            raw?.league_slug,
-            raw?.tournament_slug,
-            ""
-        ),
-
-        homeScore:sp.home,
-        awayScore:sp.away,
-
-        league,
-        status,
-        time
-    };
-}
-
-function parseMatches(raw){
-    return getMatchArray(raw).map(parseMatch);
-}
-
-
-/* =========================================================
-   STATUS
-========================================================= */
-
-function isLive(s){
-    return /live|progress|quarter|period|half|1st|2nd|3rd|4th|in.?play/.test(String(s||""));
-}
-
-function isFinished(s){
-    return /finished|final|ended|completed|full.?time|^ft$/.test(String(s||""));
-}
-
-function isUpcoming(s){
-    return !isLive(s) && !isFinished(s);
-}
-
-
-/* =========================================================
-   DATE
-========================================================= */
-
-function formatTime(v){
-    if(!v) return "—";
-
-    const d=new Date(v);
-
-    if(Number.isNaN(d.getTime())) return String(v);
-
-    return d.toLocaleTimeString("ru-RU",{
-        hour:"2-digit",
-        minute:"2-digit"
-    });
-}
-
-function formatDate(v){
-    if(!v) return "Время уточняется";
-
-    const d=new Date(v);
-
-    if(Number.isNaN(d.getTime())) return String(v);
-
-    return d.toLocaleString("ru-RU",{
-        day:"2-digit",
-        month:"2-digit",
-        year:"numeric",
-        hour:"2-digit",
-        minute:"2-digit"
-    });
-}
-
-
-/* =========================================================
-   TEAM HISTORY MATCHING
-========================================================= */
-
-function isSameTeam(a,b){
-    return similarity(a,b)>=.78;
-}
-
-function teamResult(raw,teamName){
-    const m=parseMatch(raw);
-
-    const hs=num(m.homeScore);
-    const as=num(m.awayScore);
-
-    if(hs===null || as===null) return null;
-
-    const homeSim=similarity(m.home,teamName);
-    const awaySim=similarity(m.away,teamName);
-
-    if(Math.max(homeSim,awaySim)<.70) return null;
-
-    const isHome=homeSim>=awaySim;
-
-    const scored=isHome?hs:as;
-    const conceded=isHome?as:hs;
-
-    return {
-        result:
-            scored>conceded ? "W" :
-            scored<conceded ? "L" : "D",
-
-        scored,
-        conceded,
-        diff:scored-conceded,
-        match:m
-    };
-}
-
-function historyStats(raw,team){
-    const arr=getMatchArray(raw);
-
-    const results=arr
-        .map(x=>teamResult(x,team))
-        .filter(Boolean)
-        .slice(0,10);
-
-    const recent=results.slice(0,5);
-
-    if(!results.length){
-        return {
-            results:[],
-            recent:[],
-            wins:0,
-            draws:0,
-            losses:0,
-            formScore:null,
-            scored:null,
-            conceded:null,
-            diff:null
-        };
-    }
-
-    const wins=results.filter(x=>x.result==="W").length;
-    const draws=results.filter(x=>x.result==="D").length;
-    const losses=results.filter(x=>x.result==="L").length;
-
-    const points=results.reduce((s,x)=>
-        s+(x.result==="W"?3:x.result==="D"?1:0),0
-    );
-
-    return {
-        results,
-        recent,
-        wins,
-        draws,
-        losses,
-
-        formScore:Math.round(points/(results.length*3)*100),
-
-        scored:avg(results.map(x=>x.scored)),
-        conceded:avg(results.map(x=>x.conceded)),
-        diff:avg(results.map(x=>x.diff))
-    };
-}
-
-
-/* =========================================================
-   FETCH TEAM WITH FALLBACK SLUGS
-========================================================= */
-
-async function fetchTeamHistory(teamName,knownSlug){
-    const variants=[];
-
-    if(knownSlug) variants.push(knownSlug);
-
-    for(const v of teamVariants(teamName)){
-        const s=slugify(v);
-        if(s && !variants.includes(s)) variants.push(s);
-    }
-
-    let best=null;
-    let bestCount=0;
-    let usedSlug="";
-
-    for(const slug of variants.slice(0,4)){
-        const url=
-            `${SS}/team/?sport=${encodeURIComponent(sport)}`+
-            `&slug=${encodeURIComponent(slug)}`+
-            `&limit=30&src=bet-ai-6-1`;
-
-        const raw=await safeJSON(url);
-
-        if(!raw) continue;
-
-        const stats=historyStats(raw,teamName);
-        const count=stats.results.length;
-
-        if(count>bestCount || (!best && raw)){
-            best=raw;
-            bestCount=count;
-            usedSlug=slug;
-        }
-
-        if(count>=5) break;
-    }
-
-    return {
-        raw:best,
-        count:bestCount,
-        slug:usedSlug
-    };
-}
-
-
-/* =========================================================
-   H2H
-========================================================= */
-
-function h2hFromHistories(homeRaw,awayRaw,match){
-    const all=[
-        ...getMatchArray(homeRaw),
-        ...getMatchArray(awayRaw)
-    ];
-
-    const out=[];
-    const seen=new Set();
-
-    for(const raw of all){
-        const m=parseMatch(raw);
-
-        const hs=num(m.homeScore);
-        const as=num(m.awayScore);
-
-        if(hs===null || as===null) continue;
-
-        const homeMatch=
-            Math.max(
-                similarity(m.home,match.home),
-                similarity(m.away,match.home)
+        const h =
+            recursiveTeam(
+                o,
+                "home"
             );
 
-        const awayMatch=
-            Math.max(
-                similarity(m.home,match.away),
-                similarity(m.away,match.away)
+        const a =
+            recursiveTeam(
+                o,
+                "away"
             );
 
-        if(homeMatch<.70 || awayMatch<.70) continue;
+        if(h?.name) points += 3;
+        if(a?.name) points += 3;
 
-        const key=[
-            compact(m.home),
-            compact(m.away),
-            m.time||"",
-            hs,
-            as
+    }catch(e){}
+
+    const keys =
+        Object.keys(o)
+            .map(
+                x=>x.toLowerCase()
+            );
+
+    if(
+        keys.some(
+            x=>x.includes("score")
+        )
+    ){
+        points++;
+    }
+
+    if(
+        keys.some(
+            x=>x.includes("status")
+        )
+    ){
+        points++;
+    }
+
+    if(
+        keys.some(
+            x=>
+                x.includes("time") ||
+                x.includes("date")
+        )
+    ){
+        points++;
+    }
+
+    return points;
+}
+
+
+/* ============================================================
+   RECURSIVE MATCH COLLECTION
+============================================================ */
+
+function BA7_collectMatches(root){
+
+    if(!root){
+        return [];
+    }
+
+    const output = [];
+
+    const seenKeys =
+        new Set();
+
+    const objects =
+        BA7_walk(root);
+
+    for(const entry of objects){
+
+        const o = entry.value;
+
+        if(
+            !o ||
+            typeof o !== "object" ||
+            Array.isArray(o)
+        ){
+            continue;
+        }
+
+        if(
+            BA7_matchScore(o) < 6
+        ){
+            continue;
+        }
+
+        let parsed;
+
+        try{
+
+            parsed =
+                parseMatch(o);
+
+        }catch(e){
+
+            continue;
+        }
+
+        if(
+            !parsed?.home ||
+            !parsed?.away
+        ){
+            continue;
+        }
+
+        const key = [
+
+            BA7_compact(parsed.home),
+
+            BA7_compact(parsed.away),
+
+            parsed.time || "",
+
+            parsed.homeScore ?? "",
+
+            parsed.awayScore ?? ""
+
         ].join("|");
 
-        if(seen.has(key)) continue;
+        if(
+            seenKeys.has(key)
+        ){
+            continue;
+        }
+
+        seenKeys.add(key);
+
+        output.push(o);
+    }
+
+    return output;
+}
+
+
+/* ============================================================
+   ENHANCED H2H
+============================================================ */
+
+function BA7_findH2H(
+    match,
+    sources
+){
+
+    const all = [];
+
+    for(
+        const source of sources
+    ){
+
+        if(!source){
+            continue;
+        }
+
+        all.push(
+            ...BA7_collectMatches(
+                source
+            )
+        );
+    }
+
+    const output = [];
+
+    const seen =
+        new Set();
+
+    for(const raw of all){
+
+        let m;
+
+        try{
+
+            m =
+                parseMatch(raw);
+
+        }catch(e){
+
+            continue;
+        }
+
+        if(
+            m.homeScore === null ||
+            m.homeScore === undefined ||
+            m.awayScore === null ||
+            m.awayScore === undefined
+        ){
+            continue;
+        }
+
+        const homeSimilarity =
+            Math.max(
+
+                BA7_similarity(
+                    m.home,
+                    match.home
+                ),
+
+                BA7_similarity(
+                    m.away,
+                    match.home
+                )
+            );
+
+        const awaySimilarity =
+            Math.max(
+
+                BA7_similarity(
+                    m.home,
+                    match.away
+                ),
+
+                BA7_similarity(
+                    m.away,
+                    match.away
+                )
+            );
+
+        if(
+            homeSimilarity < .68 ||
+            awaySimilarity < .68
+        ){
+            continue;
+        }
+
+        const key = [
+
+            BA7_compact(m.home),
+
+            BA7_compact(m.away),
+
+            m.time || "",
+
+            m.homeScore,
+
+            m.awayScore
+
+        ].join("|");
+
+        if(seen.has(key)){
+            continue;
+        }
+
         seen.add(key);
 
-        out.push(m);
+        output.push(m);
     }
 
-    return out.slice(0,8);
+    return output
+        .slice(0,12);
 }
 
 
-/* =========================================================
-   1.ML ODDS
-========================================================= */
+/* ============================================================
+   DECIMAL ODDS
+============================================================ */
 
-async function loadOdds(){
+function BA7_decimalOdds(value){
+
     if(
-        oddsCache &&
-        Date.now()-oddsCacheTime<30000
+        value === undefined ||
+        value === null
     ){
-        return oddsCache;
+        return null;
     }
 
-    const raw=await safeJSON(ML,12000);
+    if(
+        typeof value === "string"
+    ){
 
-    if(raw){
-        oddsCache=raw;
-        oddsCacheTime=Date.now();
-    }
+        const s =
+            value
+                .trim()
+                .replace(",", ".");
 
-    return raw;
-}
+        /*
+           American odds
+        */
 
-function deepGames(raw){
-    if(!raw) return [];
-
-    if(Array.isArray(raw.games)) return raw.games;
-    if(Array.isArray(raw.data?.games)) return raw.data.games;
-    if(Array.isArray(raw.events)) return raw.events;
-    if(Array.isArray(raw.data)) return raw.data;
-
-    const arrays=walkArrays(raw);
-
-    let best=[];
-
-    for(const arr of arrays){
         if(
-            arr.length &&
-            arr.some(x=>{
-                if(!x || typeof x!=="object") return false;
-
-                const names=oddsTeams(x);
-
-                return names.home && names.away;
-            })
+            /^[+-]\d+$/.test(s)
         ){
-            if(arr.length>best.length) best=arr;
-        }
-    }
 
-    return best;
-}
+            const american =
+                Number(s);
 
-function oddsTeams(game){
-    if(!game || typeof game!=="object"){
-        return {home:"",away:""};
-    }
+            if(american >= 100){
 
-    const home=first(
-        game.home,
-        game.home_team,
-        game.homeTeam,
-        game.team1,
-        game.teams?.home,
-        game.participants?.[0]?.name
-    );
+                return 1 +
+                    american / 100;
+            }
 
-    const away=first(
-        game.away,
-        game.away_team,
-        game.awayTeam,
-        game.team2,
-        game.teams?.away,
-        game.participants?.[1]?.name
-    );
+            if(american <= -100){
 
-    return {
-        home:objectName(home)||String(home||""),
-        away:objectName(away)||String(away||"")
-    };
-}
-
-function eventMatchScore(game,match){
-    const t=oddsTeams(game);
-
-    if(!t.home || !t.away) return 0;
-
-    const direct=
-        (
-            similarity(t.home,match.home)+
-            similarity(t.away,match.away)
-        )/2;
-
-    const reverse=
-        (
-            similarity(t.home,match.away)+
-            similarity(t.away,match.home)
-        )/2;
-
-    return Math.max(direct,reverse);
-}
-
-function findOddsGame(raw,match){
-    const games=deepGames(raw);
-
-    let best=null;
-    let bestScore=0;
-
-    for(const game of games){
-        const score=eventMatchScore(game,match);
-
-        if(score>bestScore){
-            bestScore=score;
-            best=game;
-        }
-    }
-
-    return bestScore>=.68
-        ? {game:best,score:bestScore}
-        : {game:null,score:bestScore};
-}
-
-
-/* =========================================================
-   ODDS NUMBER CONVERSION
-========================================================= */
-
-function toDecimalOdds(v){
-    if(v===null || v===undefined) return null;
-
-    if(typeof v==="string"){
-        const s=v.trim();
-
-        if(/^[+-]\d+$/.test(s)){
-            const a=Number(s);
-
-            if(a>0) return 1+a/100;
-            if(a<0) return 1+100/Math.abs(a);
+                return 1 +
+                    100 /
+                    Math.abs(american);
+            }
         }
 
-        const n=Number(s.replace(",","."));
+        const decimal =
+            Number(s);
 
-        if(Number.isFinite(n) && n>1) return n;
+        if(
+            Number.isFinite(decimal) &&
+            decimal > 1.001 &&
+            decimal < 1000
+        ){
+
+            return decimal;
+        }
 
         return null;
     }
 
-    const n=Number(v);
+    const n =
+        Number(value);
 
-    if(!Number.isFinite(n)) return null;
+    if(!Number.isFinite(n)){
+        return null;
+    }
 
-    if(n>1 && n<100) return n;
+    if(
+        n > 1.001 &&
+        n < 100
+    ){
 
-    if(n>=100) return 1+n/100;
+        return n;
+    }
 
-    if(n<=-100) return 1+100/Math.abs(n);
+    if(n >= 100){
+
+        return 1 +
+            n/100;
+    }
+
+    if(n <= -100){
+
+        return 1 +
+            100 /
+            Math.abs(n);
+    }
 
     return null;
 }
 
 
-/* =========================================================
-   EXTRACT BOOKMAKER LINES
-========================================================= */
+/* ============================================================
+   BOOKMAKER NAME
+============================================================ */
 
-function bookmakerName(o){
-    return first(
-        o?.bookmaker,
-        o?.book,
-        o?.sportsbook,
-        o?.site,
-        o?.provider,
-        o?.name,
-        o?.key,
-        "Источник"
+function BA7_bookName(o,path=""){
+
+    if(!o){
+        return "Источник";
+    }
+
+    const candidate =
+        BA7_first(
+
+            o.bookmaker_name,
+            o.bookmakerName,
+
+            o.bookmaker,
+
+            o.sportsbook,
+
+            o.book,
+
+            o.provider,
+
+            o.site,
+
+            o.source,
+
+            o.key
+        );
+
+    if(
+        typeof candidate === "string"
+    ){
+
+        return candidate;
+    }
+
+    if(
+        candidate &&
+        typeof candidate === "object"
+    ){
+
+        const n =
+            BA7_first(
+                candidate.name,
+                candidate.title,
+                candidate.key,
+                candidate.slug
+            );
+
+        if(n){
+            return String(n);
+        }
+    }
+
+    if(
+        /1\.ml/i.test(path)
+    ){
+        return "1.ML";
+    }
+
+    return "Источник";
+}
+
+
+/* ============================================================
+   MARKET NAME
+============================================================ */
+
+function BA7_marketName(o,path=""){
+
+    return String(
+        BA7_first(
+
+            o.market_name,
+            o.marketName,
+
+            o.market,
+
+            o.type,
+
+            o.name,
+
+            o.key,
+
+            path
+
+        ) || ""
+    ).toLowerCase();
+}
+
+
+/* ============================================================
+   OUTCOME NAME
+============================================================ */
+
+function BA7_outcomeName(o){
+
+    if(
+        typeof o === "string"
+    ){
+        return o;
+    }
+
+    return String(
+        BA7_first(
+
+            o?.name,
+
+            o?.label,
+
+            o?.selection,
+
+            o?.outcome,
+
+            o?.team,
+
+            o?.title,
+
+            o?.key,
+
+            ""
+
+        )
     );
 }
 
-function readOutcomeName(o){
-    return String(first(
-        o?.name,
-        o?.label,
-        o?.outcome,
-        o?.selection,
-        o?.team,
-        o?.title,
-        ""
-    ));
-}
 
-function readOutcomePrice(o){
-    if(typeof o==="number" || typeof o==="string"){
-        return toDecimalOdds(o);
+/* ============================================================
+   OUTCOME PRICE
+============================================================ */
+
+function BA7_outcomePrice(o){
+
+    if(
+        typeof o === "number" ||
+        typeof o === "string"
+    ){
+
+        return BA7_decimalOdds(o);
     }
 
-    return toDecimalOdds(first(
-        o?.price,
-        o?.odds,
-        o?.decimal,
-        o?.value,
-        o?.american
-    ));
+    return BA7_decimalOdds(
+
+        BA7_first(
+
+            o?.price,
+
+            o?.odds,
+
+            o?.decimal,
+
+            o?.decimal_odds,
+
+            o?.decimalOdds,
+
+            o?.value,
+
+            o?.american
+
+        )
+    );
 }
 
-function classifyOutcome(name,match){
-    const n=norm(name);
 
-    if(!n) return null;
+/* ============================================================
+   CLASSIFY 1X2 OUTCOME
+============================================================ */
+
+function BA7_classifyOutcome(
+    name,
+    match
+){
+
+    const n =
+        BA7_normalize(name);
+
+    if(!n){
+        return null;
+    }
 
     if(
-        n==="1" ||
-        n==="home" ||
-        similarity(name,match.home)>=.72
-    ) return "home";
+        n === "1" ||
+        n === "home"
+    ){
+        return "home";
+    }
 
     if(
-        n==="2" ||
-        n==="away" ||
-        similarity(name,match.away)>=.72
-    ) return "away";
+        n === "2" ||
+        n === "away"
+    ){
+        return "away";
+    }
 
     if(
-        n==="x" ||
-        n==="draw" ||
-        n==="tie"
-    ) return "draw";
+        n === "x" ||
+        n === "draw" ||
+        n === "tie"
+    ){
+        return "draw";
+    }
+
+    if(
+        BA7_similarity(
+            name,
+            match.home
+        ) >= .72
+    ){
+        return "home";
+    }
+
+    if(
+        BA7_similarity(
+            name,
+            match.away
+        ) >= .72
+    ){
+        return "away";
+    }
 
     return null;
 }
 
-function extractLines(game,match){
-    if(!game) return [];
 
-    const lines=[];
+/* ============================================================
+   EXTRACT 1X2 / MONEYLINE
+============================================================ */
 
-    const objects=walkObjects(game,10);
+function BA7_extractMainLines(
+    source,
+    match,
+    sourceName="unknown"
+){
 
-    for(const o of objects){
-        let home=null;
-        let draw=null;
-        let away=null;
+    if(!source){
+        return [];
+    }
 
-        const directHome=first(
-            o.home_odds,
-            o.homeOdds,
-            o.odds_home,
-            o.oddsHome,
-            o["1"]
+    const result = [];
+
+    const nodes =
+        BA7_walk(
+            source,
+            14
         );
 
-        const directDraw=first(
-            o.draw_odds,
-            o.drawOdds,
-            o.odds_draw,
-            o.oddsDraw,
-            o["X"],
-            o["x"]
-        );
+    for(
+        const node of nodes
+    ){
 
-        const directAway=first(
-            o.away_odds,
-            o.awayOdds,
-            o.odds_away,
-            o.oddsAway,
-            o["2"]
-        );
+        const o =
+            node.value;
 
-        home=toDecimalOdds(directHome);
-        draw=toDecimalOdds(directDraw);
-        away=toDecimalOdds(directAway);
+        if(
+            !o ||
+            typeof o !== "object" ||
+            Array.isArray(o)
+        ){
+            continue;
+        }
 
-        if(home && away){
-            lines.push({
-                book:bookmakerName(o),
-                home,
-                draw,
-                away
+        const path =
+            node.path || "";
+
+        const marketName =
+            BA7_marketName(
+                o,
+                path
+            );
+
+        /*
+           Prevent accidentally reading
+           scores as odds.
+        */
+
+        const marketContext =
+            /odd|market|book|sportsbook|moneyline|money line|match winner|winner|1x2|h2h|price/i
+                .test(
+                    marketName+" "+path
+                );
+
+        if(!marketContext){
+            continue;
+        }
+
+        let H =
+            BA7_decimalOdds(
+                BA7_first(
+
+                    o.home_odds,
+                    o.homeOdds,
+
+                    o.odds_home,
+                    o.oddsHome,
+
+                    o.home_price,
+                    o.homePrice,
+
+                    o["1"]
+                )
+            );
+
+        let D =
+            BA7_decimalOdds(
+                BA7_first(
+
+                    o.draw_odds,
+                    o.drawOdds,
+
+                    o.odds_draw,
+                    o.oddsDraw,
+
+                    o.draw_price,
+                    o.drawPrice,
+
+                    o["X"],
+                    o["x"]
+                )
+            );
+
+        let A =
+            BA7_decimalOdds(
+                BA7_first(
+
+                    o.away_odds,
+                    o.awayOdds,
+
+                    o.odds_away,
+                    o.oddsAway,
+
+                    o.away_price,
+                    o.awayPrice,
+
+                    o["2"]
+                )
+            );
+
+        if(
+            H &&
+            A
+        ){
+
+            result.push({
+
+                source:
+                    sourceName,
+
+                book:
+                    BA7_bookName(
+                        o,
+                        path
+                    ),
+
+                home:H,
+                draw:D,
+                away:A,
+
+                path
             });
         }
 
-        const possibleArrays=[
+        const arrays = [
+
             o.outcomes,
+
             o.selections,
+
             o.runners,
-            o.prices
-        ].filter(Array.isArray);
 
-        for(const arr of possibleArrays){
-            let H=null,D=null,A=null;
+            o.prices,
 
-            for(const outcome of arr){
-                const name=readOutcomeName(outcome);
-                const price=readOutcomePrice(outcome);
-                const type=classifyOutcome(name,match);
+            o.options
 
-                if(!price || !type) continue;
+        ].filter(
+            Array.isArray
+        );
 
-                if(type==="home") H=price;
-                if(type==="draw") D=price;
-                if(type==="away") A=price;
+        for(
+            const arr of arrays
+        ){
+
+            H=null;
+            D=null;
+            A=null;
+
+            for(
+                const outcome of arr
+            ){
+
+                const name =
+                    BA7_outcomeName(
+                        outcome
+                    );
+
+                const price =
+                    BA7_outcomePrice(
+                        outcome
+                    );
+
+                if(!price){
+                    continue;
+                }
+
+                const type =
+                    BA7_classifyOutcome(
+                        name,
+                        match
+                    );
+
+                if(type === "home"){
+                    H=price;
+                }
+
+                if(type === "draw"){
+                    D=price;
+                }
+
+                if(type === "away"){
+                    A=price;
+                }
             }
 
-            if(H && A){
-                lines.push({
-                    book:bookmakerName(o),
+            if(
+                H &&
+                A
+            ){
+
+                result.push({
+
+                    source:
+                        sourceName,
+
+                    book:
+                        BA7_bookName(
+                            o,
+                            path
+                        ),
+
                     home:H,
                     draw:D,
-                    away:A
+                    away:A,
+
+                    path
                 });
             }
         }
     }
 
-    const unique=[];
-    const keys=new Set();
+    /*
+       Deduplicate
+    */
 
-    for(const l of lines){
-        const key=[
-            String(l.book),
-            l.home?.toFixed(3),
-            l.draw?.toFixed(3),
-            l.away?.toFixed(3)
+    const unique = [];
+
+    const seen =
+        new Set();
+
+    for(const line of result){
+
+        const key = [
+
+            line.source,
+
+            line.book,
+
+            line.home?.toFixed(3),
+
+            line.draw?.toFixed(3),
+
+            line.away?.toFixed(3)
+
         ].join("|");
 
-        if(keys.has(key)) continue;
-        keys.add(key);
-        unique.push(l);
+        if(seen.has(key)){
+            continue;
+        }
+
+        seen.add(key);
+
+        unique.push(line);
     }
 
-    return unique.slice(0,30);
+    return unique
+        .slice(0,50);
 }
 
 
-/* =========================================================
-   MARKET CONSENSUS
-========================================================= */
+/* ============================================================
+   TOTALS EXTRACTION
+============================================================ */
 
-function noVig(line){
-    const inv=[];
+function BA7_extractTotals(
+    source,
+    sourceName="unknown"
+){
 
-    if(line.home) inv.push(["home",1/line.home]);
-    if(line.draw) inv.push(["draw",1/line.draw]);
-    if(line.away) inv.push(["away",1/line.away]);
-
-    const sum=inv.reduce((s,x)=>s+x[1],0);
-
-    if(!sum) return null;
-
-    const p={};
-
-    for(const [k,v] of inv){
-        p[k]=v/sum;
+    if(!source){
+        return [];
     }
 
-    return {
-        ...p,
-        overround:sum-1
-    };
-}
+    const output = [];
 
-function marketConsensus(lines){
-    if(!lines.length) return null;
-
-    const homes=[];
-    const draws=[];
-    const aways=[];
-    const margins=[];
-
-    for(const l of lines){
-        const p=noVig(l);
-
-        if(!p) continue;
-
-        if(Number.isFinite(p.home)) homes.push(p.home);
-        if(Number.isFinite(p.draw)) draws.push(p.draw);
-        if(Number.isFinite(p.away)) aways.push(p.away);
-        if(Number.isFinite(p.overround)) margins.push(p.overround);
-    }
-
-    if(!homes.length || !aways.length) return null;
-
-    return {
-        home:median(homes),
-        draw:median(draws),
-        away:median(aways),
-        margin:median(margins),
-
-        homeOdd:median(lines.map(x=>x.home)),
-        drawOdd:median(lines.map(x=>x.draw)),
-        awayOdd:median(lines.map(x=>x.away))
-    };
-}
-
-
-/* =========================================================
-   STANDINGS
-========================================================= */
-
-function standingsArray(raw){
-    if(!raw) return [];
-
-    const direct=[
-        raw.standings,
-        raw.table,
-        raw.data?.standings,
-        raw.data?.table,
-        raw.data
-    ].find(Array.isArray);
-
-    if(direct) return direct;
-
-    const arrays=walkArrays(raw);
-
-    return arrays.find(arr=>
-        arr.length &&
-        arr.some(x=>
-            x &&
-            typeof x==="object" &&
-            (
-                "position" in x ||
-                "rank" in x ||
-                "points" in x
-            )
-        )
-    ) || [];
-}
-
-function standingFor(raw,team){
-    const arr=standingsArray(raw);
-
-    let best=null;
-    let score=0;
-
-    for(const row of arr){
-        const name=first(
-            objectName(row.team),
-            row.team_name,
-            row.teamName,
-            row.name
+    const nodes =
+        BA7_walk(
+            source,
+            14
         );
 
-        const s=similarity(name,team);
+    for(
+        const node of nodes
+    ){
 
-        if(s>score){
-            score=s;
-            best=row;
+        const o =
+            node.value;
+
+        if(
+            !o ||
+            typeof o !== "object" ||
+            Array.isArray(o)
+        ){
+            continue;
+        }
+
+        const context =
+            (
+                BA7_marketName(
+                    o,
+                    node.path
+                )+
+                " "+
+                node.path
+            ).toLowerCase();
+
+        if(
+            !/total|over.?under|o\/u/i
+                .test(context)
+        ){
+            continue;
+        }
+
+        const line =
+            BA7_num(
+                BA7_first(
+
+                    o.point,
+
+                    o.line,
+
+                    o.total,
+
+                    o.handicap
+
+                )
+            );
+
+        let over =
+            BA7_decimalOdds(
+
+                BA7_first(
+
+                    o.over_odds,
+                    o.overOdds,
+                    o.over
+
+                )
+            );
+
+        let under =
+            BA7_decimalOdds(
+
+                BA7_first(
+
+                    o.under_odds,
+                    o.underOdds,
+                    o.under
+
+                )
+            );
+
+        const arrays = [
+
+            o.outcomes,
+
+            o.selections,
+
+            o.runners,
+
+            o.prices
+
+        ].filter(
+            Array.isArray
+        );
+
+        let detectedLine =
+            line;
+
+        for(
+            const arr of arrays
+        ){
+
+            for(
+                const item of arr
+            ){
+
+                const name =
+                    BA7_normalize(
+                        BA7_outcomeName(item)
+                    );
+
+                const price =
+                    BA7_outcomePrice(item);
+
+                if(!price){
+                    continue;
+                }
+
+                if(
+                    name.includes("over")
+                ){
+                    over=price;
+                }
+
+                if(
+                    name.includes("under")
+                ){
+                    under=price;
+                }
+
+                if(
+                    detectedLine === null
+                ){
+
+                    const match =
+                        name.match(
+                            /(\d+(?:\.\d+)?)/
+                        );
+
+                    if(match){
+
+                        detectedLine =
+                            Number(
+                                match[1]
+                            );
+                    }
+                }
+            }
+        }
+
+        if(
+            over &&
+            under
+        ){
+
+            output.push({
+
+                source:
+                    sourceName,
+
+                book:
+                    BA7_bookName(
+                        o,
+                        node.path
+                    ),
+
+                line:
+                    detectedLine,
+
+                over,
+                under
+            });
         }
     }
 
-    if(score<.65) return null;
-
-    return {
-        position:num(first(best.position,best.rank,best.place)),
-        points:num(first(best.points,best.pts)),
-        played:num(first(best.played,best.games,best.matches)),
-        raw:best
-    };
+    return output
+        .slice(0,30);
 }
 
 
-/* =========================================================
-   BET AI MODEL
-========================================================= */
+/* ============================================================
+   SPREAD / HANDICAP EXTRACTION
+============================================================ */
 
-function buildAnalysis(match,home,away,h2h,standingHome,standingAway,market){
-    let score=0;
-    let weight=0;
+function BA7_extractSpreads(
+    source,
+    match,
+    sourceName="unknown"
+){
 
-    const factors=[];
-
-    function add(name,value,w,text){
-        if(!Number.isFinite(value)) return;
-
-        score+=clamp(value,-1,1)*w;
-        weight+=w;
-
-        factors.push({
-            name,
-            value,
-            weight:w,
-            text
-        });
+    if(!source){
+        return [];
     }
 
-    if(home.formScore!==null && away.formScore!==null){
-        add(
-            "Форма",
-            (home.formScore-away.formScore)/100,
-            30,
-            `${home.formScore}% / ${away.formScore}%`
-        );
-    }
+    const output = [];
 
-    if(home.diff!==null && away.diff!==null){
-        const scale=Math.max(
-            1,
-            Math.abs(home.diff),
-            Math.abs(away.diff)
+    const nodes =
+        BA7_walk(
+            source,
+            14
         );
 
-        add(
-            "Разница результата",
-            (home.diff-away.diff)/(scale*2),
-            20,
-            `${home.diff.toFixed(2)} / ${away.diff.toFixed(2)}`
+    for(
+        const node of nodes
+    ){
+
+        const o =
+            node.value;
+
+        if(
+            !o ||
+            typeof o !== "object" ||
+            Array.isArray(o)
+        ){
+            continue;
+        }
+
+        const context =
+            (
+                BA7_marketName(
+                    o,
+                    node.path
+                )+
+                " "+
+                node.path
+            ).toLowerCase();
+
+        if(
+            !/spread|handicap|asian/i
+                .test(context)
+        ){
+            continue;
+        }
+
+        const arrays = [
+
+            o.outcomes,
+
+            o.selections,
+
+            o.runners,
+
+            o.prices
+
+        ].filter(
+            Array.isArray
         );
-    }
 
-    if(home.scored!==null && away.scored!==null){
-        const scale=Math.max(1,home.scored,away.scored);
+        for(
+            const arr of arrays
+        ){
 
-        add(
-            "Атака",
-            (home.scored-away.scored)/(scale*1.5),
-            12,
-            `${home.scored.toFixed(2)} / ${away.scored.toFixed(2)}`
-        );
-    }
+            let home=null;
+            let away=null;
 
-    if(home.conceded!==null && away.conceded!==null){
-        const scale=Math.max(1,home.conceded,away.conceded);
+            let homePoint=null;
+            let awayPoint=null;
 
-        add(
-            "Защита",
-            (away.conceded-home.conceded)/(scale*1.5),
-            12,
-            `${home.conceded.toFixed(2)} / ${away.conceded.toFixed(2)}`
-        );
-    }
+            for(
+                const item of arr
+            ){
 
-    if(h2h.length){
-        let hw=0,aw=0,draws=0;
+                const name =
+                    BA7_outcomeName(
+                        item
+                    );
 
-        for(const m of h2h){
-            const hs=num(m.homeScore);
-            const as=num(m.awayScore);
+                const price =
+                    BA7_outcomePrice(
+                        item
+                    );
 
-            if(hs===null || as===null) continue;
+                const point =
+                    BA7_num(
+                        BA7_first(
 
-            if(hs===as){
-                draws++;
-                continue;
+                            item?.point,
+
+                            item?.handicap,
+
+                            item?.line
+
+                        )
+                    );
+
+                const type =
+                    BA7_classifyOutcome(
+                        name,
+                        match
+                    );
+
+                if(
+                    type === "home" &&
+                    price
+                ){
+
+                    home=price;
+                    homePoint=point;
+                }
+
+                if(
+                    type === "away" &&
+                    price
+                ){
+
+                    away=price;
+                    awayPoint=point;
+                }
             }
 
-            const winner=hs>as?m.home:m.away;
+            if(
+                home &&
+                away
+            ){
 
-            if(similarity(winner,match.home)>=.72) hw++;
-            else if(similarity(winner,match.away)>=.72) aw++;
+                output.push({
+
+                    source:
+                        sourceName,
+
+                    book:
+                        BA7_bookName(
+                            o,
+                            node.path
+                        ),
+
+                    home,
+                    away,
+
+                    homePoint,
+                    awayPoint
+                });
+            }
+        }
+    }
+
+    return output
+        .slice(0,30);
+}
+
+
+/* ============================================================
+   NO-VIG
+============================================================ */
+
+function BA7_noVig(line){
+
+    if(
+        !line?.home ||
+        !line?.away
+    ){
+        return null;
+    }
+
+    const values = [];
+
+    values.push([
+        "home",
+        1/line.home
+    ]);
+
+    if(line.draw){
+
+        values.push([
+            "draw",
+            1/line.draw
+        ]);
+    }
+
+    values.push([
+        "away",
+        1/line.away
+    ]);
+
+    const total =
+        values.reduce(
+            (sum,x)=>
+                sum+x[1],
+            0
+        );
+
+    if(!total){
+        return null;
+    }
+
+    const result = {
+
+        home:null,
+        draw:null,
+        away:null,
+
+        overround:
+            total-1
+    };
+
+    for(
+        const [key,value]
+        of values
+    ){
+
+        result[key] =
+            value/total;
+    }
+
+    return result;
+}
+
+
+/* ============================================================
+   MARKET CONSENSUS
+============================================================ */
+
+function BA7_consensus(lines){
+
+    if(!lines?.length){
+        return null;
+    }
+
+    const homeProb = [];
+    const drawProb = [];
+    const awayProb = [];
+
+    const homeOdds = [];
+    const drawOdds = [];
+    const awayOdds = [];
+
+    const margins = [];
+
+    for(
+        const line of lines
+    ){
+
+        const fair =
+            BA7_noVig(line);
+
+        if(!fair){
+            continue;
         }
 
-        const decisive=hw+aw;
+        if(
+            Number.isFinite(
+                fair.home
+            )
+        ){
+            homeProb.push(
+                fair.home
+            );
+        }
 
-        if(decisive){
-            add(
-                "H2H",
-                (hw-aw)/decisive,
-                12,
-                `${hw}-${draws}-${aw}`
+        if(
+            Number.isFinite(
+                fair.draw
+            )
+        ){
+            drawProb.push(
+                fair.draw
+            );
+        }
+
+        if(
+            Number.isFinite(
+                fair.away
+            )
+        ){
+            awayProb.push(
+                fair.away
+            );
+        }
+
+        if(
+            Number.isFinite(
+                fair.overround
+            )
+        ){
+            margins.push(
+                fair.overround
+            );
+        }
+
+        if(line.home){
+            homeOdds.push(
+                line.home
+            );
+        }
+
+        if(line.draw){
+            drawOdds.push(
+                line.draw
+            );
+        }
+
+        if(line.away){
+            awayOdds.push(
+                line.away
             );
         }
     }
 
     if(
-        standingHome?.position &&
-        standingAway?.position
+        !homeProb.length ||
+        !awayProb.length
     ){
-        const diff=standingAway.position-standingHome.position;
-
-        add(
-            "Таблица",
-            diff/10,
-            10,
-            `#${standingHome.position} / #${standingAway.position}`
-        );
-    }
-
-    /*
-       Home factor has deliberately LOW weight.
-       It cannot create a prediction by itself.
-    */
-    if(
-        ["football","basketball","cricket"].includes(sport) &&
-        weight>=25
-    ){
-        add(
-            "Домашняя площадка",
-            .15,
-            4,
-            "низкий вес"
-        );
-    }
-
-    const normalized=
-        weight
-        ? score/weight
-        : 0;
-
-    const homeIndex=
-        clamp(
-            Math.round(50+normalized*34),
-            20,
-            80
-        );
-
-    const awayIndex=100-homeIndex;
-
-    /*
-      Data quality is not model probability.
-    */
-    let quality=0;
-
-    if(home.results.length>=5 && away.results.length>=5) quality+=35;
-    else if(home.results.length && away.results.length) quality+=20;
-
-    if(home.scored!==null && away.scored!==null) quality+=15;
-    if(h2h.length) quality+=15;
-    if(standingHome && standingAway) quality+=10;
-    if(market) quality+=20;
-
-    quality=clamp(quality,0,100);
-
-    let signal="Недостаточно данных";
-    let pick=null;
-    let strength="LOW";
-
-    if(weight>=35 && quality>=35){
-        const diff=Math.abs(homeIndex-awayIndex);
-
-        if(diff<8){
-            signal="Стороны близки";
-            strength="LOW";
-        }else{
-            pick=homeIndex>awayIndex ? match.home : match.away;
-
-            strength=
-                diff>=26 && quality>=65 ? "HIGH" :
-                diff>=16 && quality>=50 ? "MEDIUM" :
-                "LOW";
-
-            signal=pick;
-        }
+        return null;
     }
 
     return {
-        homeIndex,
-        awayIndex,
-        quality,
-        weight,
-        signal,
-        pick,
-        strength,
-        factors,
-        market
+
+        home:
+            BA7_median(
+                homeProb
+            ),
+
+        draw:
+            BA7_median(
+                drawProb
+            ),
+
+        away:
+            BA7_median(
+                awayProb
+            ),
+
+        homeOdd:
+            BA7_median(
+                homeOdds
+            ),
+
+        drawOdd:
+            BA7_median(
+                drawOdds
+            ),
+
+        awayOdd:
+            BA7_median(
+                awayOdds
+            ),
+
+        margin:
+            BA7_median(
+                margins
+            ),
+
+        books:
+            new Set(
+                lines.map(
+                    x=>x.book
+                )
+            ).size
     };
 }
 
 
-/* =========================================================
-   FULL DEEP ANALYSIS
-========================================================= */
+/* ============================================================
+   MARKET DISPERSION
+============================================================ */
 
-async function getDeepAnalysis(match){
-    const cacheKey=[
-        sport,
-        match.id,
-        match.home,
-        match.away
-    ].join("|");
+function BA7_marketDispersion(
+    lines
+){
 
-    const cached=deepCache.get(cacheKey);
-
-    if(cached && Date.now()-cached.time<60000){
-        return cached.data;
+    if(
+        !lines ||
+        lines.length < 2
+    ){
+        return null;
     }
 
-    const [
-        homeHistory,
-        awayHistory,
-        oddsRaw
-    ]=await Promise.all([
-        fetchTeamHistory(match.home,match.homeSlug),
-        fetchTeamHistory(match.away,match.awaySlug),
-        loadOdds()
-    ]);
+    const p = [];
 
-    /*
-       Match detail:
-       only use official slug if present.
-    */
-    const detail=match.slug
-        ? await safeJSON(
-            `${SS}/match/?sport=${encodeURIComponent(sport)}`+
-            `&slug=${encodeURIComponent(match.slug)}`+
-            `&src=bet-ai-6-1`
-        )
-        : null;
+    for(
+        const line of lines
+    ){
 
-    /*
-       Detail may contain better team / competition slugs.
-    */
-    let detailMatch=null;
+        const fair =
+            BA7_noVig(line);
 
-    if(detail){
-        const objects=walkObjects(detail);
+        if(
+            fair &&
+            Number.isFinite(
+                fair.home
+            )
+        ){
 
-        const candidate=objects.find(x=>
-            matchLikelihood(x)>=6
-        );
-
-        if(candidate){
-            detailMatch=parseMatch(candidate);
+            p.push(
+                fair.home
+            );
         }
     }
 
-    const competitionSlug=
-        first(
-            detailMatch?.competitionSlug,
-            match.competitionSlug
+    if(p.length < 2){
+        return null;
+    }
+
+    const mean =
+        BA7_average(p);
+
+    const variance =
+        BA7_average(
+            p.map(
+                x=>
+                    Math.pow(
+                        x-mean,
+                        2
+                    )
+            )
         );
 
-    const standings=competitionSlug
-        ? await safeJSON(
-            `${SS}/standings/?sport=${encodeURIComponent(sport)}`+
-            `&slug=${encodeURIComponent(competitionSlug)}`+
-            `&src=bet-ai-6-1`
-        )
+    return Math.sqrt(
+        variance
+    );
+}
+
+
+/* ============================================================
+   STANDINGS RECURSIVE FALLBACK
+============================================================ */
+
+function BA7_findStanding(
+    source,
+    team
+){
+
+    if(!source){
+        return null;
+    }
+
+    let best = null;
+    let bestSimilarity = 0;
+
+    const nodes =
+        BA7_walk(
+            source,
+            12
+        );
+
+    for(
+        const node of nodes
+    ){
+
+        const o =
+            node.value;
+
+        if(
+            !o ||
+            typeof o !== "object" ||
+            Array.isArray(o)
+        ){
+            continue;
+        }
+
+        const position =
+            BA7_num(
+                BA7_first(
+
+                    o.position,
+
+                    o.rank,
+
+                    o.place,
+
+                    o.pos
+
+                )
+            );
+
+        if(
+            position === null
+        ){
+            continue;
+        }
+
+        let name = "";
+
+        try{
+
+            name =
+                BA7_first(
+
+                    o.team_name,
+
+                    o.teamName,
+
+                    o.name,
+
+                    o.team?.name,
+
+                    o.participant?.name
+
+                ) || "";
+
+        }catch(e){}
+
+        if(!name){
+            continue;
+        }
+
+        const sim =
+            BA7_similarity(
+                name,
+                team
+            );
+
+        if(
+            sim > bestSimilarity
+        ){
+
+            bestSimilarity =
+                sim;
+
+            best = {
+
+                position,
+
+                points:
+                    BA7_num(
+                        BA7_first(
+                            o.points,
+                            o.pts
+                        )
+                    ),
+
+                played:
+                    BA7_num(
+                        BA7_first(
+                            o.played,
+                            o.games,
+                            o.matches
+                        )
+                    ),
+
+                name,
+
+                raw:o
+            };
+        }
+    }
+
+    return bestSimilarity >= .65
+        ? best
         : null;
+}
 
-    const homeStats=historyStats(
-        homeHistory.raw,
-        match.home
-    );
 
-    const awayStats=historyStats(
-        awayHistory.raw,
-        match.away
-    );
+/* ============================================================
+   SOURCE STATUS
+============================================================ */
 
-    const h2h=h2hFromHistories(
-        homeHistory.raw,
-        awayHistory.raw,
-        match
-    );
+function BA7_sourceStatus(data){
 
-    const standingHome=standingFor(
-        standings,
-        match.home
-    );
+    return {
 
-    const standingAway=standingFor(
-        standings,
-        match.away
-    );
+        sportScore:
+            true,
 
-    const oddsMatch=findOddsGame(
-        oddsRaw,
-        match
-    );
+        history:
+            !!(
+                data?.homeStats?.results?.length &&
+                data?.awayStats?.results?.length
+            ),
 
-    const lines=oddsMatch.game
-        ? extractLines(
-            oddsMatch.game,
-            match
-        )
-        : [];
+        h2h:
+            !!data?.h2h?.length,
 
-    const market=marketConsensus(lines);
+        standings:
+            !!(
+                data?.standingHome &&
+                data?.standingAway
+            ),
 
-    const analysis=buildAnalysis(
-        match,
-        homeStats,
-        awayStats,
-        h2h,
-        standingHome,
-        standingAway,
-        market
-    );
+        odds:
+            !!data?.market,
 
-    const data={
-        detail,
-        detailMatch,
+        mainLines:
+            data?.lines?.length || 0,
 
-        homeHistory,
-        awayHistory,
+        totals:
+            data?.totals?.length || 0,
 
-        homeStats,
-        awayStats,
+        spreads:
+            data?.spreads?.length || 0,
 
-        h2h,
-
-        standings,
-        standingHome,
-        standingAway,
-
-        oddsRaw,
-        oddsMatch,
-        lines,
-        market,
-
-        analysis
+        books:
+            data?.market?.books || 0
     };
-
-    deepCache.set(cacheKey,{
-        time:Date.now(),
-        data
-    });
-
-    return data;
 }
 
 
-/* =========================================================
-   MATCH LIST
-========================================================= */
+/* ============================================================
+   SAVE ORIGINAL ENGINE
+============================================================ */
 
-async function loadMatches(){
-    const box=document.getElementById("matches");
+const BA7_originalGetDeepAnalysis =
+    window.getDeepAnalysis;
 
-    box.innerHTML=`
-        <div class="loading">
-            <div class="loader"></div>
-            Получаю реальные события…
-        </div>
-    `;
 
-    const raw=await safeJSON(
-        `${SS}/matches/?sport=${encodeURIComponent(sport)}&limit=50&src=bet-ai-6-1`,
-        12000
-    );
+/* ============================================================
+   OVERRIDE DEEP ANALYSIS
+============================================================ */
 
-    if(!raw){
-        box.innerHTML=`
-            <div class="empty">
-                SportScore временно не ответил.<br><br>
-                BET AI не будет показывать выдуманные матчи.
-            </div>
-        `;
-        return;
+window.getDeepAnalysis =
+getDeepAnalysis =
+async function(match){
+
+    /*
+       First use the already-working
+       BET AI 6.1 engine.
+    */
+
+    let data =
+        await BA7_originalGetDeepAnalysis(
+            match
+        );
+
+    if(!data){
+        throw new Error(
+            "Основной источник анализа не ответил"
+        );
     }
 
-    matches=parseMatches(raw);
 
-    settleJournal();
-    renderMatches();
-    updateDashboard();
+    /* ========================================================
+       H2H FALLBACK
+    ======================================================== */
 
-    const u=document.getElementById("updated");
+    if(
+        !data.h2h ||
+        !data.h2h.length
+    ){
 
-    if(u){
-        u.innerHTML=`
-            <span class="updated-dot"></span>
-            ${new Date().toLocaleTimeString("ru-RU")}
-        `;
-    }
-}
+        const enhancedH2H =
+            BA7_findH2H(
 
+                match,
 
-/* =========================================================
-   BADGES
-========================================================= */
+                [
 
-function badge(name,logo){
-    if(logo){
-        return `
-            <img
-                class="team-logo"
-                src="${esc(logo)}"
-                alt=""
-                onerror="
-                    this.style.display='none';
-                    this.nextElementSibling.style.display='grid';
-                "
-            >
-            <span class="team-badge" style="display:none">
-                ${esc(String(name||"?").charAt(0).toUpperCase())}
-            </span>
-        `;
+                    data.homeHistory?.raw,
+
+                    data.awayHistory?.raw,
+
+                    data.detail,
+
+                    data.standings
+
+                ]
+            );
+
+        if(
+            enhancedH2H.length
+        ){
+
+            data.h2h =
+                enhancedH2H;
+        }
     }
 
-    return `
-        <span class="team-badge">
-            ${esc(String(name||"?").charAt(0).toUpperCase())}
-        </span>
-    `;
-}
 
+    /* ========================================================
+       STANDINGS FALLBACK
+    ======================================================== */
 
-/* =========================================================
-   RENDER MATCHES
-========================================================= */
+    if(
+        !data.standingHome
+    ){
 
-function renderMatches(){
-    const dashboard=document.getElementById("dashboard");
-    const journal=document.getElementById("journal");
-    const box=document.getElementById("matches");
+        data.standingHome =
 
-    if(currentView==="journal"){
-        dashboard.style.display="none";
-        journal.classList.add("show");
-        renderJournal();
-        return;
+            BA7_findStanding(
+                data.standings,
+                match.home
+            )
+
+            ||
+
+            BA7_findStanding(
+                data.detail,
+                match.home
+            );
     }
 
-    dashboard.style.display="";
-    journal.classList.remove("show");
 
-    let list=[...matches];
+    if(
+        !data.standingAway
+    ){
 
-    if(currentView==="live"){
-        list=list.filter(x=>isLive(x.status));
+        data.standingAway =
+
+            BA7_findStanding(
+                data.standings,
+                match.away
+            )
+
+            ||
+
+            BA7_findStanding(
+                data.detail,
+                match.away
+            );
     }
 
-    if(currentView==="upcoming"){
-        list=list.filter(x=>isUpcoming(x.status));
+
+    /* ========================================================
+       ODDS — COLLECT FROM ALL AVAILABLE REAL SOURCES
+    ======================================================== */
+
+    let allLines = [];
+
+    /*
+       Existing 1.ML parsed lines
+    */
+
+    if(
+        Array.isArray(
+            data.lines
+        )
+    ){
+
+        allLines.push(
+            ...data.lines.map(
+                x=>({
+                    ...x,
+                    source:
+                        x.source ||
+                        "1.ML"
+                })
+            )
+        );
     }
 
-    if(currentView==="finished"){
-        list=list.filter(x=>isFinished(x.status));
+
+    /*
+       Search raw 1.ML response again
+       using more flexible parser.
+    */
+
+    if(data.oddsRaw){
+
+        const extra =
+            BA7_extractMainLines(
+
+                data.oddsRaw,
+
+                match,
+
+                "1.ML"
+
+            );
+
+        allLines.push(
+            ...extra
+        );
     }
 
-    const title=document.getElementById("sectionTitle");
 
-    if(title){
-        title.textContent=
-            currentView==="live" ? "LIVE матчи" :
-            currentView==="finished" ? "Завершённые" :
-            "Ближайшие матчи";
+    /*
+       SportScore match detail may
+       contain genuine market data.
+       Only odds/market branches are read.
+    */
+
+    if(data.detail){
+
+        const sportScoreLines =
+            BA7_extractMainLines(
+
+                data.detail,
+
+                match,
+
+                "SportScore"
+
+            );
+
+        allLines.push(
+            ...sportScoreLines
+        );
     }
 
-    if(!list.length){
-        box.innerHTML=`
-            <div class="empty">
-                Сейчас подходящих событий нет.
-            </div>
-        `;
-        return;
+
+    /*
+       Current match raw object
+    */
+
+    if(match.raw){
+
+        const matchLines =
+            BA7_extractMainLines(
+
+                match.raw,
+
+                match,
+
+                "SportScore Match"
+
+            );
+
+        allLines.push(
+            ...matchLines
+        );
     }
 
-    box.innerHTML=list.map(m=>{
-        const index=matches.indexOf(m);
-        const live=isLive(m.status);
-        const finished=isFinished(m.status);
 
-        return `
-        <article
-            class="match-card ${live?"live-card":""}"
-            onclick="openAnalysis(${index})"
-        >
+    /* ========================================================
+       DEDUPLICATE ODDS
+    ======================================================== */
 
-            <div class="match-top">
+    const uniqueLines = [];
 
-                <div>
-                    ${
-                        live
-                        ? `<span class="live-pill">● LIVE</span>`
-                        : finished
-                        ? `<span class="match-time">FT</span>`
-                        : `<span class="match-time">${esc(formatTime(m.time))}</span>`
-                    }
-                </div>
+    const lineKeys =
+        new Set();
 
-                <div class="match-league">
-                    ${esc(m.league)}
-                </div>
+    for(
+        const line of allLines
+    ){
 
-            </div>
+        if(
+            !line.home ||
+            !line.away
+        ){
+            continue;
+        }
 
-            <div class="match-main">
+        /*
+           Basic sanity filter
+        */
 
-                <div class="team-list">
+        if(
+            line.home <= 1 ||
+            line.away <= 1 ||
+            line.home > 100 ||
+            line.away > 100
+        ){
+            continue;
+        }
 
-                    <div class="team-row">
-                        <div class="team-name">
-                            ${badge(m.home,m.homeLogo)}
-                            <span class="team-name-text">${esc(m.home)}</span>
-                        </div>
+        const key = [
 
-                        <div class="match-score">
-                            ${m.homeScore??"—"}
-                        </div>
-                    </div>
+            line.source,
 
-                    <div class="team-row">
-                        <div class="team-name">
-                            ${badge(m.away,m.awayLogo)}
-                            <span class="team-name-text">${esc(m.away)}</span>
-                        </div>
+            line.book,
 
-                        <div class="match-score">
-                            ${m.awayScore??"—"}
-                        </div>
-                    </div>
+            line.home.toFixed(3),
 
-                </div>
+            line.draw
+                ? line.draw.toFixed(3)
+                : "",
 
-                <div class="arrow">›</div>
+            line.away.toFixed(3)
 
-            </div>
+        ].join("|");
 
-            <div style="
-                margin-top:10px;
-                color:#687c9f;
-                font-size:8px;
-            ">
-                Нажми для глубокого анализа и поиска линии
-            </div>
+        if(
+            lineKeys.has(key)
+        ){
+            continue;
+        }
 
-        </article>
-        `;
-    }).join("");
-}
+        lineKeys.add(key);
 
-
-/* =========================================================
-   FORM
-========================================================= */
-
-function formHTML(results){
-    if(!results?.length){
-        return `
-            <div style="color:#647696;font-size:9px;margin-top:7px">
-                история не найдена
-            </div>
-        `;
+        uniqueLines.push(
+            line
+        );
     }
 
-    return `
-        <div class="form-badges">
-            ${results.map(x=>`
-                <span class="form-badge ${x.result.toLowerCase()}">
-                    ${x.result}
-                </span>
-            `).join("")}
-        </div>
-    `;
-}
+    data.lines =
+        uniqueLines;
 
 
-/* =========================================================
-   ODDS HTML
-========================================================= */
+    /* ========================================================
+       CONSENSUS
+    ======================================================== */
 
-function oddsValue(v){
-    return Number.isFinite(v)
-        ? v.toFixed(2)
-        : "—";
-}
+    const consensus =
+        BA7_consensus(
+            data.lines
+        );
 
-function percent(v){
-    return Number.isFinite(v)
-        ? Math.round(v*100)+"%"
-        : "—";
-}
+    if(consensus){
 
-function marketHTML(data){
-    if(!data.market){
-        return `
-            <div class="market-grid">
-                <div class="market-odd"><small>1</small><strong>—</strong></div>
-                <div class="market-odd"><small>X</small><strong>—</strong></div>
-                <div class="market-odd"><small>2</small><strong>—</strong></div>
-            </div>
-
-            <div style="
-                margin-top:12px;
-                color:#7789aa;
-                font-size:8px;
-                line-height:1.55;
-            ">
-                1.ML: ${
-                    data.oddsRaw
-                    ? data.oddsMatch.game
-                        ? "событие найдено, но подходящая основная линия не разобрана"
-                        : "ответ получен, совпадающий матч не найден"
-                    : "источник сейчас недоступен"
-                }.
-            </div>
-        `;
+        data.market =
+            consensus;
     }
 
-    const m=data.market;
 
-    return `
-        <div class="market-grid">
+    /* ========================================================
+       TOTALS
+    ======================================================== */
 
-            <div class="market-odd">
-                <small>1</small>
-                <strong>${oddsValue(m.homeOdd)}</strong>
-            </div>
+    let totals = [];
 
-            <div class="market-odd">
-                <small>X</small>
-                <strong>${oddsValue(m.drawOdd)}</strong>
-            </div>
+    if(data.oddsRaw){
 
-            <div class="market-odd">
-                <small>2</small>
-                <strong>${oddsValue(m.awayOdd)}</strong>
-            </div>
+        totals.push(
+            ...BA7_extractTotals(
+                data.oddsRaw,
+                "1.ML"
+            )
+        );
+    }
 
-        </div>
+    if(data.detail){
 
-        <div class="fair-title">
-            Рыночная оценка без маржи
-        </div>
+        totals.push(
+            ...BA7_extractTotals(
+                data.detail,
+                "SportScore"
+            )
+        );
+    }
 
-        <div class="fair-grid">
+    if(match.raw){
 
-            <div class="fair">
-                1
-                <strong>${percent(m.home)}</strong>
-            </div>
+        totals.push(
+            ...BA7_extractTotals(
+                match.raw,
+                "SportScore Match"
+            )
+        );
+    }
 
-            <div class="fair">
-                X
-                <strong>${percent(m.draw)}</strong>
-            </div>
-
-            <div class="fair">
-                2
-                <strong>${percent(m.away)}</strong>
-            </div>
-
-        </div>
-
-        <div style="
-            margin-top:10px;
-            color:#7082a2;
-            font-size:8px;
-            line-height:1.5;
-        ">
-            Найдено линий: ${data.lines.length}<br>
-            Источник: 1.ML<br>
-            Совпадение события: ${Math.round(data.oddsMatch.score*100)}%
-        </div>
-    `;
-}
+    data.totals =
+        totals;
 
 
-/* =========================================================
-   OPEN ANALYSIS
-========================================================= */
+    /* ========================================================
+       SPREADS / HANDICAPS
+    ======================================================== */
 
-async function openAnalysis(index){
-    selectedMatch=matches[index];
+    let spreads = [];
 
-    const page=document.getElementById("analysisPage");
-    const content=document.getElementById("analysisContent");
+    if(data.oddsRaw){
 
-    page.classList.add("show");
-    document.body.style.overflow="hidden";
+        spreads.push(
+            ...BA7_extractSpreads(
 
-    content.innerHTML=`
-        <div class="loading" style="margin-top:20px">
+                data.oddsRaw,
 
-            <div class="loader"></div>
+                match,
 
-            <b>BET AI 6.1 DATA ENGINE</b>
+                "1.ML"
 
-            <br><br>
+            )
+        );
+    }
 
-            SportScore → Match Detail → Team History →
-            H2H → Standings → 1.ML → Bookmaker Lines →
-            Consensus → Model
+    if(data.detail){
 
-        </div>
-    `;
+        spreads.push(
+            ...BA7_extractSpreads(
+
+                data.detail,
+
+                match,
+
+                "SportScore"
+
+            )
+        );
+    }
+
+    if(match.raw){
+
+        spreads.push(
+            ...BA7_extractSpreads(
+
+                match.raw,
+
+                match,
+
+                "SportScore Match"
+
+            )
+        );
+    }
+
+    data.spreads =
+        spreads;
+
+
+    /* ========================================================
+       MARKET DISPERSION
+    ======================================================== */
+
+    data.marketDispersion =
+        BA7_marketDispersion(
+            data.lines
+        );
+
+
+    /* ========================================================
+       REBUILD MODEL AFTER FALLBACKS
+    ======================================================== */
 
     try{
-        const data=await getDeepAnalysis(selectedMatch);
-        selectedMatch.analysisData=data;
-        renderAnalysis(selectedMatch,data);
-    }catch(e){
-        console.error(e);
 
-        content.innerHTML=`
-            <div class="empty" style="margin-top:20px">
-                Ошибка глубокого анализа.<br><br>
-                ${esc(e.message)}
+        data.analysis =
+            buildAnalysis(
+
+                match,
+
+                data.homeStats,
+
+                data.awayStats,
+
+                data.h2h,
+
+                data.standingHome,
+
+                data.standingAway,
+
+                data.market
+
+            );
+
+    }catch(e){
+
+        console.warn(
+            "BET AI 7 model rebuild:",
+            e
+        );
+    }
+
+
+    /* ========================================================
+       EXTRA QUALITY
+    ======================================================== */
+
+    const status =
+        BA7_sourceStatus(data);
+
+    data.betAI7 = {
+
+        version:
+            "7.0",
+
+        status,
+
+        marketDispersion:
+            data.marketDispersion,
+
+        generatedAt:
+            new Date()
+                .toISOString()
+    };
+
+
+    /*
+       Additional quality points only
+       when real extra data exists.
+    */
+
+    if(
+        data.analysis
+    ){
+
+        let bonus = 0;
+
+        if(
+            status.h2h
+        ){
+            bonus += 3;
+        }
+
+        if(
+            status.standings
+        ){
+            bonus += 3;
+        }
+
+        if(
+            status.odds
+        ){
+            bonus += 4;
+        }
+
+        if(
+            status.books >= 2
+        ){
+            bonus += 3;
+        }
+
+        if(
+            status.totals
+        ){
+            bonus += 2;
+        }
+
+        if(
+            status.spreads
+        ){
+            bonus += 2;
+        }
+
+        data.analysis.quality =
+            BA7_clamp(
+
+                data.analysis.quality +
+                bonus,
+
+                0,
+                100
+            );
+    }
+
+    return data;
+};
+
+
+/* ============================================================
+   EXTEND MARKET HTML
+============================================================ */
+
+const BA7_originalMarketHTML =
+    window.marketHTML;
+
+
+window.marketHTML =
+marketHTML =
+function(data){
+
+    let base = "";
+
+    try{
+
+        base =
+            BA7_originalMarketHTML(
+                data
+            );
+
+    }catch(e){
+
+        base = "";
+    }
+
+
+    const status =
+        BA7_sourceStatus(
+            data
+        );
+
+
+    let extra = `
+
+        <div style="
+            margin-top:14px;
+            padding-top:12px;
+            border-top:1px solid #1a3152;
+        ">
+
+            <div style="
+                color:#8093b5;
+                font-size:8px;
+                line-height:1.7;
+            ">
+
+                BET AI 7.0 MARKET ENGINE
+
+                <br>
+
+                Линий:
+                <b style="color:#fff">
+                    ${status.mainLines}
+                </b>
+
+                · Букмекеров:
+                <b style="color:#fff">
+                    ${status.books}
+                </b>
+
+                · Тоталов:
+                <b style="color:#fff">
+                    ${status.totals}
+                </b>
+
+                · Фор:
+                <b style="color:#fff">
+                    ${status.spreads}
+                </b>
+
+            </div>
+
+    `;
+
+
+    if(
+        Number.isFinite(
+            data.marketDispersion
+        )
+    ){
+
+        const disagreement =
+            data.marketDispersion * 100;
+
+        extra += `
+
+            <div style="
+                margin-top:8px;
+                color:#7186a8;
+                font-size:8px;
+            ">
+
+                Разброс рынка:
+                ${disagreement.toFixed(1)}%
+
             </div>
         `;
     }
-}
 
 
-/* =========================================================
-   RENDER ANALYSIS
-========================================================= */
-
-function renderAnalysis(match,data){
-    const a=data.analysis;
-    const h=data.homeStats;
-    const aw=data.awayStats;
-
-    const factors=a.factors.length
-        ? a.factors.map(f=>`
-            <div class="factor">
-                <span class="factor-name">
-                    ${esc(f.name)}
-                </span>
-
-                <span class="factor-value ${
-                    f.value>0?"positive":
-                    f.value<0?"negative":
-                    "neutral"
-                }">
-                    ${f.value>0?"+":""}${f.value.toFixed(2)}
-                </span>
-            </div>
-
-            <div style="
-                color:#607394;
-                font-size:7px;
-                margin-top:-7px;
-                margin-bottom:8px;
-            ">
-                ${esc(f.text)}
-            </div>
-        `).join("")
-        : `
-            <div style="color:#7485a5;font-size:9px">
-                Статистических факторов пока недостаточно.
-            </div>
-        `;
-
-    const sourceLine=`
-        SportScore
-        <span class="${matches.length?"available":"unavailable"}">
-            ${matches.length?"✓":"×"}
-        </span>
-        · History
-        <span class="${h.results.length&&aw.results.length?"available":"unavailable"}">
-            ${h.results.length&&aw.results.length?"✓":"×"}
-        </span>
-        · H2H
-        <span class="${data.h2h.length?"available":"unavailable"}">
-            ${data.h2h.length?"✓":"×"}
-        </span>
-        · Table
-        <span class="${data.standingHome&&data.standingAway?"available":"unavailable"}">
-            ${data.standingHome&&data.standingAway?"✓":"×"}
-        </span>
-        · Odds
-        <span class="${data.market?"available":"unavailable"}">
-            ${data.market?"✓":"×"}
-        </span>
-        · Lines ${data.lines.length}
+    extra += `
+        </div>
     `;
 
-    document.getElementById("analysisContent").innerHTML=`
 
-        <section class="analysis-match">
-
-            <div class="analysis-league">
-                ${esc(match.league)}
-            </div>
-
-            <div class="analysis-time">
-                ${esc(formatDate(match.time))}
-            </div>
-
-            <div class="versus">
-
-                <div class="analysis-team">
-
-                    <div class="analysis-logo">
-                        ${
-                            match.homeLogo
-                            ? `<img src="${esc(match.homeLogo)}" alt="">`
-                            : esc(match.home.charAt(0))
-                        }
-                    </div>
-
-                    <div class="analysis-team-name">
-                        ${esc(match.home)}
-                    </div>
-
-                    ${formHTML(h.recent)}
-
-                </div>
-
-                <div class="vs-box">
-                    <div class="vs-text">VS</div>
-                    <div class="vs-score">
-                        ${match.homeScore??"—"} : ${match.awayScore??"—"}
-                    </div>
-                </div>
-
-                <div class="analysis-team">
-
-                    <div class="analysis-logo">
-                        ${
-                            match.awayLogo
-                            ? `<img src="${esc(match.awayLogo)}" alt="">`
-                            : esc(match.away.charAt(0))
-                        }
-                    </div>
-
-                    <div class="analysis-team-name">
-                        ${esc(match.away)}
-                    </div>
-
-                    ${formHTML(aw.recent)}
-
-                </div>
-
-            </div>
-
-            <div style="
-                margin-top:17px;
-                padding:9px;
-                border-radius:10px;
-                background:#071426;
-                color:#7589aa;
-                font-size:8px;
-                line-height:1.55;
-            ">
-                ${sourceLine}
-            </div>
-
-        </section>
+    return base + extra;
+};
 
 
-        <div class="analysis-grid">
+/* ============================================================
+   EXTEND ANALYSIS PAGE
+============================================================ */
 
-            <section class="panel">
-
-                <div class="panel-title">
-                    Индекс BET AI 6.1
-                </div>
-
-                <div class="model-row">
-
-                    <div class="model-row-top">
-                        <span>${esc(match.home)}</span>
-                        <strong>${a.homeIndex}</strong>
-                    </div>
-
-                    <div class="model-bar">
-                        <div
-                            class="model-fill"
-                            style="width:${a.homeIndex}%"
-                        ></div>
-                    </div>
-
-                </div>
-
-                <div class="model-row">
-
-                    <div class="model-row-top">
-                        <span>${esc(match.away)}</span>
-                        <strong>${a.awayIndex}</strong>
-                    </div>
-
-                    <div class="model-bar">
-                        <div
-                            class="model-fill away"
-                            style="width:${a.awayIndex}%"
-                        ></div>
-                    </div>
-
-                </div>
-
-                <div class="confidence">
-
-                    <div class="confidence-top">
-                        <span>Качество данных</span>
-                        <strong>${a.quality}%</strong>
-                    </div>
-
-                    <div class="confidence-bar">
-                        <div
-                            class="confidence-fill"
-                            style="width:${a.quality}%"
-                        ></div>
-                    </div>
-
-                </div>
-
-                <div style="
-                    margin-top:10px;
-                    color:#7183a3;
-                    font-size:8px;
-                    line-height:1.5;
-                ">
-                    Индекс — сравнительная статистическая оценка,
-                    не вероятность победы.
-                </div>
-
-            </section>
+const BA7_originalRenderAnalysis =
+    window.renderAnalysis;
 
 
-            <section class="panel">
+window.renderAnalysis =
+renderAnalysis =
+function(match,data){
 
-                <div class="panel-title">
-                    Букмекерский рынок
-                </div>
+    /*
+       Render original working UI
+    */
 
-                ${marketHTML(data)}
+    BA7_originalRenderAnalysis(
+        match,
+        data
+    );
 
-            </section>
+
+    const root =
+        document.getElementById(
+            "analysisContent"
+        );
+
+    if(!root){
+        return;
+    }
+
+
+    /* ========================================================
+       VERSION LABEL
+    ======================================================== */
+
+    root
+        .querySelectorAll("*")
+        .forEach(el=>{
+
+            if(
+                el.children.length === 0 &&
+                el.textContent
+            ){
+
+                el.textContent =
+                    el.textContent
+                        .replace(
+                            /BET AI 6\.1/g,
+                            "BET AI 7.0"
+                        )
+                        .replace(
+                            /BET AI 6\.0/g,
+                            "BET AI 7.0"
+                        );
+            }
+        });
+
+
+    /* ========================================================
+       SOURCE DIAGNOSTICS
+    ======================================================== */
+
+    const s =
+        BA7_sourceStatus(
+            data
+        );
+
+    const diagnostic =
+        document.createElement(
+            "section"
+        );
+
+    diagnostic.className =
+        "detail-section";
+
+    diagnostic.innerHTML = `
+
+        <div class="detail-title">
+
+            BET AI 7.0 · DATA ENGINE
 
         </div>
 
 
-        <section class="prediction">
-
-            <div class="prediction-label">
-                ✦ BET AI 6.1 ANALYSIS
-            </div>
-
-            <div class="prediction-main">
-
-                <div class="grade">
-                    ${
-                        a.strength==="HIGH"?"A":
-                        a.strength==="MEDIUM"?"B":
-                        a.pick?"C":"—"
-                    }
-                </div>
-
-                <div>
-
-                    <div class="prediction-title">
-                        ${esc(a.signal)}
-                    </div>
-
-                    <div class="prediction-sub">
-
-                        ${
-                            a.pick
-                            ? `Направление модели: ${esc(a.pick)}.`
-                            : a.signal==="Стороны близки"
-                            ? "Модель не видит достаточного статистического перевеса."
-                            : "Нужно больше подтверждённых исторических данных."
-                        }
-
-                        Качество данных: ${a.quality}%.
-                        Сила сигнала: ${a.strength}.
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
+        <div style="
+            display:grid;
+            grid-template-columns:
+                repeat(2,minmax(0,1fr));
+            gap:8px;
+        ">
 
 
-        <section class="panel" style="margin-top:10px">
-
-            <div class="panel-title">
-                Ключевые факторы
-            </div>
-
-            ${factors}
-
-        </section>
+            ${BA7_statusCard(
+                "MATCHES",
+                s.sportScore
+            )}
 
 
-        <section class="detail-section">
-
-            <div class="detail-title">
-                Форма
-            </div>
-
-            <div class="form-row">
-                <div class="form-name">
-                    ${esc(match.home)}
-                    · найдено ${h.results.length}
-                </div>
-
-                ${formHTML(h.recent)}
-            </div>
-
-            <div class="form-row">
-                <div class="form-name">
-                    ${esc(match.away)}
-                    · найдено ${aw.results.length}
-                </div>
-
-                ${formHTML(aw.recent)}
-            </div>
-
-            <div class="metrics">
-
-                <div class="metric">
-                    <small>${esc(match.home)} · результат</small>
-                    <strong>${h.scored===null?"—":h.scored.toFixed(2)}</strong>
-                </div>
-
-                <div class="metric">
-                    <small>${esc(match.away)} · результат</small>
-                    <strong>${aw.scored===null?"—":aw.scored.toFixed(2)}</strong>
-                </div>
-
-                <div class="metric">
-                    <small>${esc(match.home)} · против</small>
-                    <strong>${h.conceded===null?"—":h.conceded.toFixed(2)}</strong>
-                </div>
-
-                <div class="metric">
-                    <small>${esc(match.away)} · против</small>
-                    <strong>${aw.conceded===null?"—":aw.conceded.toFixed(2)}</strong>
-                </div>
-
-            </div>
-
-        </section>
+            ${BA7_statusCard(
+                "HISTORY",
+                s.history
+            )}
 
 
-        <section class="detail-section">
+            ${BA7_statusCard(
+                "H2H",
+                s.h2h
+            )}
+
+
+            ${BA7_statusCard(
+                "TABLE",
+                s.standings
+            )}
+
+
+            ${BA7_statusCard(
+                "ODDS",
+                s.odds
+            )}
+
+
+            ${BA7_statusCard(
+                "BOOKS",
+                s.books > 0,
+                s.books
+            )}
+
+
+            ${BA7_statusCard(
+                "TOTALS",
+                s.totals > 0,
+                s.totals
+            )}
+
+
+            ${BA7_statusCard(
+                "SPREADS",
+                s.spreads > 0,
+                s.spreads
+            )}
+
+        </div>
+
+
+        <div style="
+            margin-top:12px;
+            padding:10px;
+            border-radius:10px;
+            background:#071426;
+            color:#7184a5;
+            font-size:8px;
+            line-height:1.6;
+        ">
+
+            BET AI использует только данные,
+            реально найденные в ответах источников.
+
+            Отсутствующий коэффициент,
+            H2H или таблица не подставляются
+            искусственно.
+
+        </div>
+    `;
+
+
+    root.appendChild(
+        diagnostic
+    );
+
+
+    /* ========================================================
+       TOTALS PANEL
+    ======================================================== */
+
+    if(
+        data.totals?.length
+    ){
+
+        const panel =
+            document.createElement(
+                "section"
+            );
+
+        panel.className =
+            "detail-section";
+
+        panel.innerHTML = `
 
             <div class="detail-title">
-                H2H
-            </div>
 
-            ${
-                data.h2h.length
-                ? data.h2h.map(x=>`
-                    <div style="
-                        display:flex;
-                        justify-content:space-between;
-                        gap:10px;
-                        padding:9px 0;
-                        border-bottom:1px solid #172b49;
-                        font-size:9px;
-                    ">
-                        <span>
-                            ${esc(x.home)} — ${esc(x.away)}
-                        </span>
-
-                        <strong>
-                            ${x.homeScore??"—"}:${x.awayScore??"—"}
-                        </strong>
-                    </div>
-                `).join("")
-                : `
-                    <div style="
-                        color:#7486a6;
-                        font-size:9px;
-                        line-height:1.5;
-                    ">
-                        Подтверждённые очные встречи
-                        в доступной истории не найдены.
-                    </div>
-                `
-            }
-
-        </section>
-
-
-        <section class="detail-section">
-
-            <div class="detail-title">
-                Таблица
-            </div>
-
-            <div class="metrics">
-
-                <div class="metric">
-                    <small>${esc(match.home)}</small>
-                    <strong>
-                        ${
-                            data.standingHome?.position
-                            ? "#"+data.standingHome.position
-                            : "—"
-                        }
-                    </strong>
-                </div>
-
-                <div class="metric">
-                    <small>${esc(match.away)}</small>
-                    <strong>
-                        ${
-                            data.standingAway?.position
-                            ? "#"+data.standingAway.position
-                            : "—"
-                        }
-                    </strong>
-                </div>
+                Тоталы
 
             </div>
 
-        </section>
+            ${data.totals
+                .slice(0,12)
+                .map(t=>`
 
-
-        ${
-            data.lines.length
-            ? `
-            <section class="detail-section">
-
-                <div class="detail-title">
-                    Найденные букмекерские линии
-                </div>
-
-                ${data.lines.slice(0,12).map(l=>`
                     <div style="
                         display:grid;
-                        grid-template-columns:1fr 45px 45px 45px;
-                        gap:5px;
+                        grid-template-columns:
+                            1fr 55px 55px 55px;
+                        gap:6px;
                         align-items:center;
-                        padding:8px 0;
-                        border-bottom:1px solid #172b49;
+                        padding:9px 0;
+                        border-bottom:
+                            1px solid #172b49;
                         font-size:8px;
                     ">
 
                         <span style="
+                            color:#91a1bc;
                             overflow:hidden;
                             text-overflow:ellipsis;
                             white-space:nowrap;
-                            color:#9ba9c1;
                         ">
-                            ${esc(l.book)}
+
+                            ${esc(
+                                t.book ||
+                                t.source
+                            )}
+
                         </span>
 
-                        <strong>${oddsValue(l.home)}</strong>
-                        <strong>${oddsValue(l.draw)}</strong>
-                        <strong>${oddsValue(l.away)}</strong>
+
+                        <strong>
+
+                            ${
+                                t.line ??
+                                "—"
+                            }
+
+                        </strong>
+
+
+                        <strong style="
+                            color:#30e0a1
+                        ">
+
+                            O ${
+                                t.over
+                                    ?.toFixed(2)
+                            }
+
+                        </strong>
+
+
+                        <strong style="
+                            color:#b37aff
+                        ">
+
+                            U ${
+                                t.under
+                                    ?.toFixed(2)
+                            }
+
+                        </strong>
 
                     </div>
+
                 `).join("")}
 
-            </section>
-            `
-            : ""
-        }
+        `;
+
+        root.appendChild(
+            panel
+        );
+    }
 
 
-        <section class="detail-section">
+    /* ========================================================
+       SPREADS PANEL
+    ======================================================== */
+
+    if(
+        data.spreads?.length
+    ){
+
+        const panel =
+            document.createElement(
+                "section"
+            );
+
+        panel.className =
+            "detail-section";
+
+        panel.innerHTML = `
 
             <div class="detail-title">
-                Источники
-            </div>
 
-            <div class="data-grid">
-
-                <div class="data-item">
-                    <small>SPORTSCORE</small>
-                    <strong class="available">✓</strong>
-                </div>
-
-                <div class="data-item">
-                    <small>HISTORY</small>
-                    <strong class="${h.results.length&&aw.results.length?"available":"unavailable"}">
-                        ${h.results.length&&aw.results.length?"✓":"—"}
-                    </strong>
-                </div>
-
-                <div class="data-item">
-                    <small>H2H</small>
-                    <strong class="${data.h2h.length?"available":"unavailable"}">
-                        ${data.h2h.length?"✓":"—"}
-                    </strong>
-                </div>
-
-                <div class="data-item">
-                    <small>TABLE</small>
-                    <strong class="${data.standingHome&&data.standingAway?"available":"unavailable"}">
-                        ${data.standingHome&&data.standingAway?"✓":"—"}
-                    </strong>
-                </div>
-
-                <div class="data-item">
-                    <small>1.ML</small>
-                    <strong class="${data.market?"available":"unavailable"}">
-                        ${data.market?"✓":"—"}
-                    </strong>
-                </div>
-
-                <div class="data-item">
-                    <small>QUALITY</small>
-                    <strong>${a.quality}%</strong>
-                </div>
+                Форы / Handicap
 
             </div>
+
+            ${data.spreads
+                .slice(0,12)
+                .map(x=>`
+
+                    <div style="
+                        display:grid;
+                        grid-template-columns:
+                            1fr 1fr 1fr;
+                        gap:6px;
+                        padding:9px 0;
+                        border-bottom:
+                            1px solid #172b49;
+                        font-size:8px;
+                    ">
+
+                        <span style="
+                            color:#91a1bc
+                        ">
+
+                            ${esc(
+                                x.book ||
+                                x.source
+                            )}
+
+                        </span>
+
+
+                        <strong>
+
+                            1
+                            ${
+                                x.homePoint ??
+                                ""
+                            }
+
+                            @
+                            ${
+                                x.home
+                                    ?.toFixed(2)
+                            }
+
+                        </strong>
+
+
+                        <strong>
+
+                            2
+                            ${
+                                x.awayPoint ??
+                                ""
+                            }
+
+                            @
+                            ${
+                                x.away
+                                    ?.toFixed(2)
+                            }
+
+                        </strong>
+
+                    </div>
+
+                `).join("")}
+
+        `;
+
+        root.appendChild(
+            panel
+        );
+    }
+};
+
+
+/* ============================================================
+   STATUS CARD
+============================================================ */
+
+function BA7_statusCard(
+    name,
+    ok,
+    value=null
+){
+
+    return `
+
+        <div style="
+            padding:10px;
+            border-radius:10px;
+            background:#08172a;
+            border:1px solid #18365d;
+        ">
 
             <div style="
-                margin-top:13px;
-                color:#7082a3;
-                font-size:8px;
-                line-height:1.6;
+                color:#7185a7;
+                font-size:7px;
             ">
-                Powered by
-                <a
-                    href="https://sportscore.com/"
-                    target="_blank"
-                    rel="dofollow"
-                    style="color:#8399ff"
-                >SportScore</a>
-                · Odds data:
-                <a
-                    href="https://1.ml/"
-                    target="_blank"
-                    style="color:#8399ff"
-                >1.ML</a>
+
+                ${name}
+
             </div>
 
-        </section>
 
+            <div style="
+                margin-top:4px;
+                font-size:15px;
+                font-weight:800;
+                color:
+                    ${
+                        ok
+                            ? "#31e0a1"
+                            : "#ff537c"
+                    };
+            ">
 
-        <section class="detail-section">
+                ${
+                    value !== null
+                        ? value
+                        : ok
+                            ? "✓"
+                            : "—"
+                }
 
-            <button
-                class="primary-button"
-                onclick="savePrediction()"
-            >
-                ☆ Зафиксировать прогноз
-            </button>
+            </div>
 
-            <button
-                class="secondary-button"
-                onclick="copyAnalysis()"
-            >
-                📋 Скопировать полный анализ
-            </button>
+        </div>
 
-        </section>
     `;
 }
 
 
-/* =========================================================
-   CLOSE
-========================================================= */
+/* ============================================================
+   UPDATE VISIBLE VERSION
+============================================================ */
 
-function closeAnalysis(){
-    document.getElementById("analysisPage").classList.remove("show");
-    document.body.style.overflow="";
-}
-
-
-/* =========================================================
-   JOURNAL
-========================================================= */
-
-function getJournal(){
-    try{
-        return JSON.parse(localStorage.getItem(JOURNAL_KEY)||"[]");
-    }catch{
-        return [];
-    }
-}
-
-function setJournal(j){
-    localStorage.setItem(
-        JOURNAL_KEY,
-        JSON.stringify(j.slice(0,500))
-    );
-
-    updateDashboard();
-}
-
-function journalStats(){
-    const j=getJournal();
-
-    const done=j.filter(x=>["win","loss","push"].includes(x.result));
-
-    const wins=done.filter(x=>x.result==="win").length;
-    const losses=done.filter(x=>x.result==="loss").length;
-    const pushes=done.filter(x=>x.result==="push").length;
-
-    const winRate=
-        wins+losses
-        ? Math.round(wins/(wins+losses)*100)
-        : null;
+function BA7_updateVersionText(){
 
     /*
-       ROI only calculated when real odds snapshot exists.
+       Do not destroy child elements.
+       Only replace text nodes.
     */
-    let profit=0;
-    let bets=0;
 
-    for(const x of done){
-        if(!Number.isFinite(x.pickOdds)) continue;
+    const walker =
+        document.createTreeWalker(
 
-        bets++;
+            document.body,
 
-        if(x.result==="win"){
-            profit+=x.pickOdds-1;
-        }else if(x.result==="loss"){
-            profit-=1;
-        }
-    }
-
-    const roi=bets ? profit/bets*100 : null;
-
-    return {
-        total:j.length,
-        wins,
-        losses,
-        pushes,
-        winRate,
-        roi
-    };
-}
-
-
-/* =========================================================
-   SAVE
-========================================================= */
-
-function savePrediction(){
-    if(!selectedMatch?.analysisData) return;
-
-    const data=selectedMatch.analysisData;
-    const a=data.analysis;
-
-    if(!a.pick){
-        alert("Сильного направления для фиксации сейчас нет.");
-        return;
-    }
-
-    const j=getJournal();
-
-    if(j.some(x=>String(x.matchId)===String(selectedMatch.id))){
-        alert("Этот матч уже сохранён.");
-        return;
-    }
-
-    let pickOdds=null;
-
-    if(data.market){
-        pickOdds=
-            similarity(a.pick,selectedMatch.home)>=.72
-                ? data.market.homeOdd
-                : data.market.awayOdd;
-    }
-
-    j.unshift({
-        id:Date.now(),
-        matchId:selectedMatch.id,
-        sport,
-
-        home:selectedMatch.home,
-        away:selectedMatch.away,
-
-        pick:a.pick,
-        pickOdds,
-
-        homeIndex:a.homeIndex,
-        awayIndex:a.awayIndex,
-
-        quality:a.quality,
-        strength:a.strength,
-
-        books:data.lines.length,
-
-        created:new Date().toISOString(),
-        result:null
-    });
-
-    setJournal(j);
-
-    alert("Прогноз BET AI 6.1 сохранён.");
-}
-
-
-/* =========================================================
-   SETTLE
-========================================================= */
-
-function settleJournal(){
-    const j=getJournal();
-    let changed=false;
-
-    for(const p of j){
-        if(p.result) continue;
-
-        const m=matches.find(x=>
-            String(x.id)===String(p.matchId)
+            NodeFilter.SHOW_TEXT
         );
 
-        if(!m || !isFinished(m.status)) continue;
 
-        const hs=num(m.homeScore);
-        const as=num(m.awayScore);
+    const nodes = [];
 
-        if(hs===null || as===null) continue;
-
-        if(hs===as){
-            p.result="push";
-        }else{
-            const winner=hs>as?m.home:m.away;
-
-            p.result=
-                similarity(winner,p.pick)>=.72
-                    ? "win"
-                    : "loss";
-        }
-
-        changed=true;
-    }
-
-    if(changed) setJournal(j);
-}
-
-
-/* =========================================================
-   JOURNAL RENDER
-========================================================= */
-
-function renderJournal(){
-    const box=document.getElementById("journal");
-    const j=getJournal();
-    const s=journalStats();
-
-    box.innerHTML=`
-
-        <div class="section-head">
-            <div class="section-title">
-                Прогнозы BET AI 6.1
-            </div>
-        </div>
-
-        <div class="journal-stats">
-
-            <div class="stat">
-                <div class="stat-label">ВСЕГО</div>
-                <div class="stat-value">${s.total}</div>
-            </div>
-
-            <div class="stat">
-                <div class="stat-label">WIN RATE</div>
-                <div class="stat-value">
-                    ${s.winRate===null?"—":s.winRate+"%"}
-                </div>
-            </div>
-
-            <div class="stat">
-                <div class="stat-label">ROI</div>
-                <div class="stat-value">
-                    ${s.roi===null?"—":s.roi.toFixed(1)+"%"}
-                </div>
-            </div>
-
-            <div class="stat">
-                <div class="stat-label">W / L</div>
-                <div class="stat-value">
-                    ${s.wins}/${s.losses}
-                </div>
-            </div>
-
-        </div>
-
-        ${
-            !j.length
-            ? `
-                <div class="empty" style="margin-top:12px">
-                    Сохранённых прогнозов пока нет.
-                </div>
-            `
-            : j.map(x=>`
-
-                <div class="journal-item">
-
-                    <div class="journal-item-top">
-
-                        <div class="journal-match">
-                            ${esc(x.home)} — ${esc(x.away)}
-                        </div>
-
-                        <div class="result ${x.result||""}">
-                            ${x.result?x.result.toUpperCase():"OPEN"}
-                        </div>
-
-                    </div>
-
-                    <div class="journal-info">
-
-                        Прогноз:
-                        <b>${esc(x.pick)}</b>
-
-                        ${
-                            x.pickOdds
-                            ? ` @ ${x.pickOdds.toFixed(2)}`
-                            : ""
-                        }
-
-                        <br>
-
-                        Индекс:
-                        ${x.homeIndex}/${x.awayIndex}
-
-                        · качество:
-                        ${x.quality}%
-
-                        · lines:
-                        ${x.books||0}
-
-                        <br>
-
-                        ${new Date(x.created).toLocaleString("ru-RU")}
-
-                    </div>
-
-                </div>
-
-            `).join("")
-        }
-    `;
-}
-
-
-/* =========================================================
-   DASHBOARD
-========================================================= */
-
-function updateDashboard(){
-    const s=journalStats();
-
-    const e=id=>document.getElementById(id);
-
-    if(e("statMatches")) e("statMatches").textContent=matches.length;
-
-    if(e("statLive")){
-        e("statLive").textContent=
-            matches.filter(x=>isLive(x.status)).length;
-    }
-
-    if(e("statWinRate")){
-        e("statWinRate").textContent=
-            s.winRate===null?"—":s.winRate+"%";
-    }
-
-    if(e("heroWinRate")){
-        e("heroWinRate").textContent=
-            s.winRate===null?"—":s.winRate+"%";
-    }
-
-    if(e("statROI")){
-        e("statROI").textContent=
-            s.roi===null?"—":s.roi.toFixed(1)+"%";
-    }
-}
-
-
-/* =========================================================
-   COPY TO CHATGPT
-========================================================= */
-
-async function copyAnalysis(){
-    if(!selectedMatch?.analysisData) return;
-
-    const m=selectedMatch;
-    const d=m.analysisData;
-    const a=d.analysis;
-
-    const books=d.lines.slice(0,10).map(x=>
-        `${x.book}: 1=${oddsValue(x.home)} X=${oddsValue(x.draw)} 2=${oddsValue(x.away)}`
-    ).join("\n");
-
-    const h2h=d.h2h.map(x=>
-        `${x.home} ${x.homeScore}-${x.awayScore} ${x.away}`
-    ).join("\n");
-
-    const text=`
-Проведи независимый глубокий анализ матча.
-
-Спорт: ${sport}
-Лига: ${m.league}
-Матч: ${m.home} — ${m.away}
-Дата: ${formatDate(m.time)}
-
-BET AI 6.1
-Индекс: ${a.homeIndex}/${a.awayIndex}
-Качество данных: ${a.quality}%
-Сигнал: ${a.signal}
-Сила: ${a.strength}
-
-ФОРМА
-
-${m.home}
-Последние: ${d.homeStats.recent.map(x=>x.result).join(" ")||"нет"}
-W/D/L: ${d.homeStats.wins}/${d.homeStats.draws}/${d.homeStats.losses}
-Средний результат: ${d.homeStats.scored?.toFixed(2)??"нет"}
-Средний против: ${d.homeStats.conceded?.toFixed(2)??"нет"}
-
-${m.away}
-Последние: ${d.awayStats.recent.map(x=>x.result).join(" ")||"нет"}
-W/D/L: ${d.awayStats.wins}/${d.awayStats.draws}/${d.awayStats.losses}
-Средний результат: ${d.awayStats.scored?.toFixed(2)??"нет"}
-Средний против: ${d.awayStats.conceded?.toFixed(2)??"нет"}
-
-H2H:
-${h2h||"не найден"}
-
-ТАБЛИЦА:
-${m.home}: ${d.standingHome?.position?"#"+d.standingHome.position:"нет"}
-${m.away}: ${d.standingAway?.position?"#"+d.standingAway.position:"нет"}
-
-БУКМЕКЕРСКИЕ ЛИНИИ:
-${books||"совпадающая линия не найдена"}
-
-Consensus:
-1: ${oddsValue(d.market?.homeOdd)}
-X: ${oddsValue(d.market?.drawOdd)}
-2: ${oddsValue(d.market?.awayOdd)}
-
-No-vig market:
-1: ${percent(d.market?.home)}
-X: ${percent(d.market?.draw)}
-2: ${percent(d.market?.away)}
-
-ВАЖНО:
-Индекс BET AI не является вероятностью.
-
-Проверь в интернете свежие составы, травмы, дисквалификации, мотивацию, расписание, домашние/выездные показатели и актуальные коэффициенты.
-
-Не выдумывай отсутствующие данные.
-Сделай аргументы за и против каждого сценария и укажи неопределённость.
-`.trim();
-
-    try{
-        await navigator.clipboard.writeText(text);
-        alert("Полный пакет анализа скопирован.");
-    }catch{
-        prompt("Скопируй:",text);
-    }
-}
-
-
-/* =========================================================
-   NAVIGATION
-========================================================= */
-
-function changeView(view){
-    currentView=view;
-
-    document.querySelectorAll(".nav-button").forEach(b=>{
-        b.classList.toggle("active",b.dataset.view===view);
-    });
-
-    document.querySelectorAll(".bottom-button").forEach(b=>{
-        b.classList.toggle("active",b.dataset.bottom===view);
-    });
-
-    renderMatches();
-
-    window.scrollTo({
-        top:0,
-        behavior:"smooth"
-    });
-}
-
-document.querySelectorAll(".nav-button").forEach(b=>{
-    b.addEventListener("click",()=>{
-        changeView(b.dataset.view);
-    });
-});
-
-document.querySelectorAll(".bottom-button").forEach(b=>{
-    b.addEventListener("click",()=>{
-        changeView(b.dataset.bottom);
-    });
-});
-
-document.querySelectorAll(".sport-button").forEach(b=>{
-    b.addEventListener("click",async()=>{
-
-        document.querySelectorAll(".sport-button").forEach(x=>
-            x.classList.remove("active")
-        );
-
-        b.classList.add("active");
-
-        sport=b.dataset.sport;
-        currentView="all";
-
-        document.querySelectorAll(".nav-button").forEach(x=>
-            x.classList.toggle("active",x.dataset.view==="all")
-        );
-
-        document.querySelectorAll(".bottom-button").forEach(x=>
-            x.classList.toggle("active",x.dataset.bottom==="all")
-        );
-
-        await loadMatches();
-    });
-});
-
-document.addEventListener("keydown",e=>{
-    if(e.key==="Escape") closeAnalysis();
-});
-
-
-/* =========================================================
-   START
-========================================================= */
-
-updateDashboard();
-loadMatches();
-
-setInterval(()=>{
-    if(
-        !document
-            .getElementById("analysisPage")
-            .classList
-            .contains("show")
+    while(
+        walker.nextNode()
     ){
-        loadMatches();
+
+        nodes.push(
+            walker.currentNode
+        );
     }
-},60000);
+
+
+    for(
+        const node of nodes
+    ){
+
+        if(
+            /BET AI 6\.[01]/.test(
+                node.nodeValue
+            )
+        ){
+
+            node.nodeValue =
+                node.nodeValue
+                    .replace(
+                        /BET AI 6\.0/g,
+                        "BET AI 7.0"
+                    )
+                    .replace(
+                        /BET AI 6\.1/g,
+                        "BET AI 7.0"
+                    );
+        }
+    }
+
+
+    document.title =
+        document.title
+            .replace(
+                /6\.0/g,
+                "7.0"
+            )
+            .replace(
+                /6\.1/g,
+                "7.0"
+            );
+}
+
+
+/* ============================================================
+   JOURNAL VERSION
+============================================================ */
+
+window.BETAI7_JOURNAL =
+    "betai70_journal";
+
+
+/* ============================================================
+   ERROR SAFETY
+============================================================ */
+
+window.addEventListener(
+    "unhandledrejection",
+    event=>{
+
+        console.warn(
+            "BET AI 7 source rejected:",
+            event.reason
+        );
+    }
+);
+
+
+/* ============================================================
+   START
+============================================================ */
+
+setTimeout(
+    BA7_updateVersionText,
+    100
+);
+
+
+setTimeout(
+    BA7_updateVersionText,
+    1000
+);
+
+
+console.log(
+    "BET AI 7.0 READY"
+);
 
 </script>
    </body>
