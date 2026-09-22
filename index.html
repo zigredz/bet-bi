@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080b12">
+  <title>BET AI</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 50% -10%, #172347 0%, transparent 38%),
+        #080b12;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .app {
+      max-width: 520px;
+      margin: auto;
+      padding: 26px 18px 50px;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+
+    .logo span {
+      color: #7c8cff;
+    }
+
+    .live {
+      padding: 7px 11px;
+      border-radius: 20px;
+      background: rgba(53, 211, 153, .12);
+      color: #52e0a8;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      color: #7e8ba8;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.1;
+    }
+
+    .description {
+      color: #99a5bd;
+      line-height: 1.5;
+      margin: 12px 0 26px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    .stat {
+      padding: 16px;
+      background: rgba(20, 27, 45, .9);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 18px;
+    }
+
+    .stat small {
+      color: #7885a1;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 25px;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin: 0 0 14px;
+    }
+
+    .match {
+      padding: 18px;
+      margin-bottom: 13px;
+      border-radius: 20px;
+      background: rgba(18, 25, 42, .94);
+      border: 1px solid rgba(255,255,255,.06);
+    }
+
+    .match-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .league {
+      color: #7584a5;
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .teams {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .confidence {
+      height: fit-content;
+      padding: 7px 10px;
+      border-radius: 20px;
+      background: rgba(64, 218, 160, .12);
+      color: #59dfa9;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .prediction {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 14px;
+      background: #0c1220;
+    }
+
+    .prediction small {
+      color: #7885a1;
+    }
+
+    .prediction strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 17px;
+    }
+
+    .probability {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 14px;
+      color: #9ba7c0;
+      font-size: 13px;
+    }
+
+    .probability b {
+      color: #fff;
+    }
+
+    .bar {
+      margin-top: 8px;
+      height: 7px;
+      background: #080d18;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .fill {
+      height: 100%;
+      border-radius: 20px;
+      background: linear-gradient(90deg, #697cff, #57dfaa);
+    }
+
+    .warning {
+      margin-top: 28px;
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.035);
+      color: #6f7b94;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .refresh {
+      width: 100%;
+      margin-top: 18px;
+      border: 0;
+      border-radius: 15px;
+      padding: 15px;
+      background: #7180ff;
+      color: white;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <div class="top">
+    <div class="logo">BET <span>AI</span></div>
+    <div class="live">● LIVE</div>
+  </div>
+
+  <div class="subtitle">AI SPORTS ANALYTICS</div>
+
+  <h1>Умный анализ<br>спортивных матчей</h1>
+
+  <p class="description">
+    Вероятности, статистика и аналитическая оценка матчей в одном месте.
+  </p>
+
+  <div class="stats">
+
+    <div class="stat">
+      <small>Матчей сегодня</small>
+      <strong>3</strong>
+    </div>
+
+    <div class="stat">
+      <small>Средняя вероятность</small>
+      <strong>78%</strong>
+    </div>
+
+  </div>
+
+  <div class="section-title">Прогнозы сегодня</div>
+
+  <div class="match">
+
+    <div class="match-head">
+      <div>
+        <div class="league">NBA</div>
+        <div class="teams">
+          Phoenix Suns<br>
+          Dallas Mavericks
+        </div>
+      </div>
+
+      <div class="confidence">ВЫСОКАЯ</div>
+    </div>
+
+    <div class="prediction">
+      <small>Прогноз модели</small>
+      <strong>Тотал больше 226.5</strong>
+    </div>
+
+    <div class="probability">
+      <span>Вероятность</span>
+      <b>81%</b>
+    </div>
+
+    <div class="bar">
+      <div class="fill" style="width:81%"></div>
+    </div>
+
+  </div>
+
+  <div class="match">
+
+    <div class="match-head">
+      <div>
+        <div class="league">NBA</div>
+        <div class="teams">
+          Boston Celtics<br>
+          Miami Heat
+        </div>
+      </div>
+
+      <div class="confidence">СРЕДНЯЯ+</div>
+    </div>
+
+    <div class="prediction">
+      <small>Прогноз модели</small>
+      <strong>Boston -4.5</strong>
+    </div>
+
+    <div class="probability">
+      <span>Вероятность</span>
+      <b>76%</b>
+    </div>
+
+    <div class="bar">
+      <div class="fill" style="width:76%"></div>
+    </div>
+
+  </div>
+
+  <div class="match">
+
+    <div class="match-head">
+      <div>
+        <div class="league">EUROLEAGUE</div>
+        <div class="teams">
+          Real Madrid<br>
+          Fenerbahçe
+        </div>
+      </div>
+
+      <div class="confidence">ВЫСОКАЯ</div>
+    </div>
+
+    <div class="prediction">
+      <small>Прогноз модели</small>
+      <strong>Real Madrid — победа</strong>
+    </div>
+
+    <div class="probability">
+      <span>Вероятность</span>
+      <b>79%</b>
+    </div>
+
+    <div class="bar">
+      <div class="fill" style="width:79%"></div>
+    </div>
+
+  </div>
+
+  <button class="refresh" onclick="refreshData()">
+    Обновить анализ
+  </button>
+
+  <div class="warning">
+    BET AI предоставляет аналитическую информацию, а не гарантирует результат.
+    Ставки на спорт связаны с риском потери денежных средств.
+  </div>
+
+</div>
+
+<script>
+  function refreshData() {
+    const button = document.querySelector(".refresh");
+
+    button.innerText = "Анализируем...";
+
+    setTimeout(() => {
+      button.innerText = "✓ Анализ обновлён";
+
+      setTimeout(() => {
+        button.innerText = "Обновить анализ";
+      }, 1500);
+    }, 800);
+  }
+</script>
+
+</body>
+</html>
